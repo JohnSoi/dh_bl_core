@@ -1,13 +1,10 @@
 """Модуль конфигурации приложения."""
-from datetime import datetime
 from functools import lru_cache
-from re import match
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .consts import VERSION_REG_EXP, VERSION_MIN_YEAR, MIN_VERSION_MONTH, MAX_VERSION_MONTH
-from .exceptions import InvalidVersionFormatException, InvalidVersionYearException, InvalidVersionMonthException
+from config.validators import validate_app_version
 
 
 class AppConfig(BaseSettings):
@@ -49,7 +46,7 @@ class AppConfig(BaseSettings):
         Валидирует формат версии в формате YEAR.MONTH.PATCH.
 
         Проверяет, что версия соответствует формату YYYY.MM.PATCH, где:
-        - YYYY - четырехзначный год (например, 2023, 2024)
+        - YYYY - четырехзначный год (например, 2025, 2026)
         - MM - номер месяца от 01 до 12
         - PATCH - номер патча (целое число)
 
@@ -69,28 +66,16 @@ class AppConfig(BaseSettings):
 
 
         Examples:
-            >>> AppConfig.validate_version_format("2023.12.1")
-            '2023.12.1'
-            >>> AppConfig.validate_version_format("2024.01.5")
-            '2024.01.5'
+            >>> AppConfig.validate_version_format("2025.12.1")
+            '2025.12.1'
+            >>> AppConfig.validate_version_format("2026.01.5")
+            '2026.01.5'
             >>> AppConfig.validate_version_format("23.12.1")
             Traceback (most recent call last):
             ...
             ValueError: Версия должна быть в формате YEAR.MONTH.PATCH (например, 2023.12.1)
         """
-        if not match(VERSION_REG_EXP, v):
-            raise InvalidVersionFormatException()
-        
-        year, month, patch = map(int, v.split('.'))
-        current_year: int = datetime.now().year
-        
-        if year < VERSION_MIN_YEAR or year > current_year + 1:
-            raise InvalidVersionYearException(current_year)
-        
-        if month < MIN_VERSION_MONTH or month > MAX_VERSION_MONTH:
-            raise InvalidVersionMonthException()
-        
-        return v
+        return validate_app_version(v)
 
 
 @lru_cache()

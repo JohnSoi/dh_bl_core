@@ -316,7 +316,7 @@ class UnprocessableEntityException(BaseAppException):
         UnprocessableEntityException: Поле email обязательно
     """
     _DETAILS: str = "Неверный формат данных."
-    _STATUS_CODE: int = status.HTTP_422_UNPROCESSABLE_ENTITY
+    _STATUS_CODE: int = status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class NotImplementedException(BaseAppException):

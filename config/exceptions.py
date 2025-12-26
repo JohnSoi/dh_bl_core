@@ -19,9 +19,9 @@ class InvalidVersionFormatException(InternalServerErrorException):
         >>> raise InvalidVersionFormatException()
         Traceback (most recent call last):
         ...
-        InvalidVersionFormatException: Версия должна быть в формате YEAR.MONTH.PATCH (например, 2023.12.1)
+        InvalidVersionFormatException: Версия должна быть в формате YEAR.MONTH.PATCH (например, 2025.12.1)
     """
-    _DETAILS = "Версия должна быть в формате YEAR.MONTH.PATCH (например, 2023.12.1)"
+    _DETAILS = "Версия должна быть в формате YEAR.MONTH.PATCH (например, 2025.12.1)"
 
 
 class InvalidVersionYearException(InternalServerErrorException):
