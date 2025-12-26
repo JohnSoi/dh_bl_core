@@ -13,7 +13,7 @@ class AppConfig(BaseSettings):
 
     AppConfig наследует от BaseSettings из Pydantic и предоставляет централизованное
     хранилище для всех настроек приложения. Класс автоматически загружает значения
-    из переменных окружения с префиксом 'APP_' из файла .env, расположенного
+    из переменных окружения с префиксом 'APP_' из файла .env-example, расположенного
     в корне проекта.
 
     Attributes:
@@ -33,7 +33,7 @@ class AppConfig(BaseSettings):
         >>> if config.debug:
         ...     print("Режим отладки включен")
     """
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="APP_")
+    model_config = SettingsConfigDict(env_file=".env-example", env_prefix="APP_")
 
     debug: bool = False
     name: str
