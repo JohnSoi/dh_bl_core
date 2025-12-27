@@ -23,6 +23,7 @@ class PGDatabaseConfig(BaseSettings):
         username (str): Имя пользователя для подключения к базе данных.
         password (str): Пароль для подключения к базе данных.
         database (str): Название базы данных.
+        echo (bool): Включает режим отладки SQL запросов. По умолчанию False.
 
     Examples:
         >>> from dh_bl_core.config import PGDatabaseConfig
@@ -44,6 +45,7 @@ class PGDatabaseConfig(BaseSettings):
     username: str
     password: str
     database: str
+    echo: bool = False
 
     @field_validator("host")
     @classmethod
