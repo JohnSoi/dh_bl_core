@@ -1,4 +1,5 @@
 """Модуль конфигурации подключения к базе данных PostgreSQL."""
+from functools import lru_cache
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -166,3 +167,30 @@ class PGDatabaseConfig(BaseSettings):
             'postgresql+asyncpg://user:pass@localhost:5432/mydb'
         """
         return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+
+
+@lru_cache()
+def get_pg_database_config() -> PGDatabaseConfig:
+    """
+    Возвращает экземпляр конфигурации подключения к базе данных PostgreSQL.
+
+    Функция использует кэширование через @lru_cache, чтобы гарантировать,
+    что объект конфигурации создается только один раз за время жизни приложения.
+    Это обеспечивает согласованность конфигурации и избегает повторной инициализации.
+
+    Returns:
+        PGDatabaseConfig: Экземпляр конфигурации с настройками подключения к PostgreSQL.
+
+    Examples:
+        >>> from dh_bl_core.config.pg_database import get_pg_database_config
+        >>>
+        >>> # Получение экземпляра конфигурации
+        >>> config = get_pg_database_config()
+        >>>
+        >>> # Использование конфигурации для подключения
+        >>> sync_url = config.get_sync_connection_url()
+        >>> async_url = config.get_async_connection_url()
+        >>> print(sync_url)
+        postgresql://user:password@localhost:5432/dbname
+    """
+    return PGDatabaseConfig()
