@@ -5,7 +5,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import UUID as PG_UUID
-from sqlalchemy import Column, DateTime, func, text
+from sqlalchemy import DateTime, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -21,7 +21,7 @@ class UuidMixin:
                       Поле не может быть NULL.
 
     Examples:
-        >>> from sqlalchemy import create_engine
+        >>> from sqlalchemy import create_engine, Column, Integer, String
         >>> from sqlalchemy.orm import sessionmaker
         >>>
         >>> engine = create_engine('postgresql://user:pass@localhost/db')
@@ -62,7 +62,7 @@ class TimestampMixin:
                            False если запись была обновлена.
 
     Examples:
-        >>> from sqlalchemy import create_engine
+        >>> from sqlalchemy import create_engine, Column, Integer, String
         >>> from sqlalchemy.orm import sessionmaker
         >>>
         >>> engine = create_engine('postgresql://user:pass@localhost/db')
@@ -136,7 +136,7 @@ class SoftDeleteMixin:
                           False если запись активна.
 
     Examples:
-        >>> from sqlalchemy import create_engine
+        >>> from sqlalchemy import create_engine, Column, Integer, String
         >>> from sqlalchemy.orm import sessionmaker
         >>>
         >>> engine = create_engine('postgresql://user:pass@localhost/db')
