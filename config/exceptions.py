@@ -1,6 +1,8 @@
 """Модуль исключений при проверке параметров конфигурации приложения"""
+
 from exceptions import UnprocessableEntityException
-from .consts import VERSION_MIN_YEAR, MIN_VERSION_MONTH, MAX_VERSION_MONTH, MIN_PORT_NUMBER, MAX_PORT_NUMBER
+
+from . import consts
 
 
 class InvalidVersionFormatException(UnprocessableEntityException):
@@ -21,6 +23,7 @@ class InvalidVersionFormatException(UnprocessableEntityException):
         ...
         InvalidVersionFormatException: Версия должна быть в формате YEAR.MONTH.PATCH (например, 2025.12.1)
     """
+
     _DETAILS = "Версия должна быть в формате YEAR.MONTH.PATCH (например, 2025.12.1)"
 
 
@@ -45,8 +48,9 @@ class InvalidVersionYearException(UnprocessableEntityException):
         ...
         InvalidVersionYearException: Год в версии должен быть в диапазоне от 2025 до 2026
     """
+
     def __init__(self, current_year: int) -> None:
-        super().__init__(f"Год в версии должен быть в диапазоне от {VERSION_MIN_YEAR} до {current_year + 1}")
+        super().__init__(f"Год в версии должен быть в диапазоне от {consts.VERSION_MIN_YEAR} до {current_year + 1}")
 
 
 class InvalidVersionMonthException(UnprocessableEntityException):
@@ -68,7 +72,8 @@ class InvalidVersionMonthException(UnprocessableEntityException):
         ...
         InvalidVersionMonthException: Месяц в версии должен быть в диапазоне от 1 до 12
     """
-    _DETAILS = f"Месяц в версии должен быть в диапазоне от {MIN_VERSION_MONTH} до {MAX_VERSION_MONTH}"
+
+    _DETAILS = f"Месяц в версии должен быть в диапазоне от {consts.MIN_VERSION_MONTH} до {consts.MAX_VERSION_MONTH}"
 
 
 class InvalidDbHostException(UnprocessableEntityException):
@@ -88,6 +93,7 @@ class InvalidDbHostException(UnprocessableEntityException):
         ...
         InvalidDbHostException: Некорректный хост для подключения к БД
     """
+
     _DETAILS = "Некорректный хост для подключения к БД"
 
 
@@ -109,6 +115,7 @@ class InvalidDbUsernameException(UnprocessableEntityException):
         ...
         InvalidDbUsernameException: Некорректное имя пользователя для подключения к БД
     """
+
     _DETAILS = "Некорректное имя пользователя для подключения к БД"
 
 
@@ -129,6 +136,7 @@ class InvalidDbPasswordException(UnprocessableEntityException):
         ...
         InvalidDbPasswordException: Некорректный пароль для подключения к БД
     """
+
     _DETAILS = "Некорректный пароль для подключения к БД"
 
 
@@ -149,6 +157,7 @@ class InvalidDbNameException(UnprocessableEntityException):
         ...
         InvalidDbNameException: Некорректное имя БД
     """
+
     _DETAILS = "Некорректное имя БД"
 
 
@@ -171,4 +180,8 @@ class InvalidDbPortException(UnprocessableEntityException):
         ...
         InvalidDbPortException: Некорректный порт для подключения к БД. Допустимый диапазон: от 1 до 65535
     """
-    _DETAILS = f"Некорректный порт для подключения к БД. Допустимый диапазон: от {MIN_PORT_NUMBER} до {MAX_PORT_NUMBER}"
+
+    _DETAILS = (
+        f"Некорректный порт для подключения к БД. "
+        f"Допустимый диапазон: от {consts.MIN_PORT_NUMBER} до {consts.MAX_PORT_NUMBER}"
+    )

@@ -45,8 +45,9 @@ class BaseAppException(HTTPException):
         ...
         CustomException: Кастомная ошибка
     """
-    _DETAILS: str | None = None
-    _STATUS_CODE: int | None = None
+
+    _DETAILS: str = ""
+    _STATUS_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     def __init__(self, details: str | None = None, status_code: int | None = None):
         """
@@ -79,7 +80,10 @@ class BaseAppException(HTTPException):
         if not any((status_code, self._STATUS_CODE)):
             raise ValueError("Нельзя создать исключение без HTTP-кода.")
 
-        super().__init__(detail=details or self._DETAILS, status_code=status_code or self._STATUS_CODE)
+        super().__init__(
+            detail=details or self._DETAILS,
+            status_code=status_code or self._STATUS_CODE,
+        )
 
 
 class NotFoundException(BaseAppException):
@@ -104,8 +108,9 @@ class NotFoundException(BaseAppException):
         ...
         NotFoundException: Пользователь не найден
     """
-    _DETAILS: str = "Не удалось найти ресурс по переданным параметрам."
-    _STATUS_CODE: int = status.HTTP_404_NOT_FOUND
+
+    _DETAILS = "Не удалось найти ресурс по переданным параметрам."
+    _STATUS_CODE = status.HTTP_404_NOT_FOUND
 
 
 class BadRequestException(BaseAppException):
@@ -130,8 +135,9 @@ class BadRequestException(BaseAppException):
         ...
         BadRequestException: Некорректный email
     """
-    _DETAILS: str = "В запросе допущена ошибка."
-    _STATUS_CODE: int = status.HTTP_400_BAD_REQUEST
+
+    _DETAILS = "В запросе допущена ошибка."
+    _STATUS_CODE = status.HTTP_400_BAD_REQUEST
 
 
 class UnauthorizedException(BaseAppException):
@@ -156,8 +162,9 @@ class UnauthorizedException(BaseAppException):
         ...
         UnauthorizedException: Токен истек
     """
-    _DETAILS: str = "Для доступа к ресурсу требуется аутентификация."
-    _STATUS_CODE: int = status.HTTP_401_UNAUTHORIZED
+
+    _DETAILS = "Для доступа к ресурсу требуется аутентификация."
+    _STATUS_CODE = status.HTTP_401_UNAUTHORIZED
 
 
 class ForbiddenException(BaseAppException):
@@ -182,8 +189,9 @@ class ForbiddenException(BaseAppException):
         ...
         ForbiddenException: Недостаточно прав администратора
     """
-    _DETAILS: str = "У вас недостаточно прав для доступа к ресурсу."
-    _STATUS_CODE: int = status.HTTP_403_FORBIDDEN
+
+    _DETAILS = "У вас недостаточно прав для доступа к ресурсу."
+    _STATUS_CODE = status.HTTP_403_FORBIDDEN
 
 
 class ConflictException(BaseAppException):
@@ -209,8 +217,9 @@ class ConflictException(BaseAppException):
         ...
         ConflictException: Пользователь с таким email уже существует
     """
-    _DETAILS: str = "Ресурс с такими параметрами уже существует."
-    _STATUS_CODE: int = status.HTTP_409_CONFLICT
+
+    _DETAILS = "Ресурс с такими параметрами уже существует."
+    _STATUS_CODE = status.HTTP_409_CONFLICT
 
 
 class InternalServerErrorException(BaseAppException):
@@ -235,8 +244,9 @@ class InternalServerErrorException(BaseAppException):
         ...
         InternalServerErrorException: Ошибка базы данных
     """
-    _DETAILS: str = "Внутренняя ошибка сервера."
-    _STATUS_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    _DETAILS = "Внутренняя ошибка сервера."
+    _STATUS_CODE = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 class ServiceUnavailableException(BaseAppException):
@@ -261,8 +271,9 @@ class ServiceUnavailableException(BaseAppException):
         ...
         ServiceUnavailableException: Техническое обслуживание
     """
-    _DETAILS: str = "Сервис недоступен."
-    _STATUS_CODE: int = status.HTTP_503_SERVICE_UNAVAILABLE
+
+    _DETAILS = "Сервис недоступен."
+    _STATUS_CODE = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 class TooManyRequestsException(BaseAppException):
@@ -288,8 +299,9 @@ class TooManyRequestsException(BaseAppException):
         ...
         TooManyRequestsException: Лимит запросов исчерпан
     """
-    _DETAILS: str = "Слишком много запросов. Попробуйте позже."
-    _STATUS_CODE: int = status.HTTP_429_TOO_MANY_REQUESTS
+
+    _DETAILS = "Слишком много запросов. Попробуйте позже."
+    _STATUS_CODE = status.HTTP_429_TOO_MANY_REQUESTS
 
 
 class UnprocessableEntityException(BaseAppException):
@@ -315,8 +327,9 @@ class UnprocessableEntityException(BaseAppException):
         ...
         UnprocessableEntityException: Поле email обязательно
     """
-    _DETAILS: str = "Неверный формат данных."
-    _STATUS_CODE: int = status.HTTP_422_UNPROCESSABLE_CONTENT
+
+    _DETAILS = "Неверный формат данных."
+    _STATUS_CODE = status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class NotImplementedException(BaseAppException):
@@ -342,8 +355,9 @@ class NotImplementedException(BaseAppException):
         ...
         NotImplementedException: Метод еще в разработке
     """
-    _DETAILS: str = "Запрашиваемый Вами ресурс не реализован."
-    _STATUS_CODE: int = status.HTTP_501_NOT_IMPLEMENTED
+
+    _DETAILS = "Запрашиваемый Вами ресурс не реализован."
+    _STATUS_CODE = status.HTTP_501_NOT_IMPLEMENTED
 
 
 class MethodNotAllowedException(BaseAppException):
@@ -369,5 +383,6 @@ class MethodNotAllowedException(BaseAppException):
         ...
         MethodNotAllowedException: Метод PUT не поддерживается
     """
-    _DETAILS: str = "Данный метод не поддерживается для данного ресурса."
-    _STATUS_CODE: int = status.HTTP_405_METHOD_NOT_ALLOWED
+
+    _DETAILS = "Данный метод не поддерживается для данного ресурса."
+    _STATUS_CODE = status.HTTP_405_METHOD_NOT_ALLOWED

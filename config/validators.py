@@ -1,14 +1,27 @@
 """Модуль валидаторов для конфигураций."""
+
 from datetime import datetime
 from re import match
 from typing import Type
 
 from exceptions import BaseAppException
-from validators import validate_is_not_empty_str, ValueIsEmptyStrException, ValueIsNotStrException, validate_is_int, \
-    ValueIsNotIntException
-from .consts import VERSION_REG_EXP, VERSION_MIN_YEAR, MIN_VERSION_MONTH, MAX_VERSION_MONTH, MIN_PORT_NUMBER, \
-    MAX_PORT_NUMBER
+from validators import (
+    ValueIsEmptyStrException,
+    ValueIsNotIntException,
+    ValueIsNotStrException,
+    validate_is_int,
+    validate_is_not_empty_str,
+)
+
 from . import exceptions as exc
+from .consts import (
+    MAX_PORT_NUMBER,
+    MAX_VERSION_MONTH,
+    MIN_PORT_NUMBER,
+    MIN_VERSION_MONTH,
+    VERSION_MIN_YEAR,
+    VERSION_REG_EXP,
+)
 
 
 def validate_app_version(version: str) -> str:
@@ -49,7 +62,7 @@ def validate_app_version(version: str) -> str:
     if not match(VERSION_REG_EXP, version):
         raise exc.InvalidVersionFormatException()
 
-    year, month, patch = map(int, version.split('.'))
+    year, month, _ = map(int, version.split("."))
     current_year: int = datetime.now().year
 
     if year < VERSION_MIN_YEAR or year > current_year + 1:
@@ -169,6 +182,7 @@ def validate_db_name(name: str) -> str:
     """
     return _validate_is_not_empty_str(name, exc.InvalidDbNameException)
 
+
 def validate_db_port(port: int) -> int:
     """
     Валидирует порт базы данных.
@@ -199,14 +213,14 @@ def validate_db_port(port: int) -> int:
         ValueError: Порт вне допустимого диапазона
     """
     try:
-        port: int = validate_is_int(port)
-    except ValueIsNotIntException:
+        valid_port: int = validate_is_int(port)
+    except ValueIsNotIntException as val_exc:
+        raise exc.InvalidDbPortException() from val_exc
+
+    if valid_port < MIN_PORT_NUMBER or valid_port > MAX_PORT_NUMBER:
         raise exc.InvalidDbPortException()
 
-    if port < MIN_PORT_NUMBER or port > MAX_PORT_NUMBER:
-        raise exc.InvalidDbPortException()
-
-    return port
+    return valid_port
 
 
 def _validate_is_not_empty_str(value: str, exception: Type[BaseAppException]) -> str:
@@ -237,5 +251,5 @@ def _validate_is_not_empty_str(value: str, exception: Type[BaseAppException]) ->
     """
     try:
         return validate_is_not_empty_str(value)
-    except (ValueIsEmptyStrException, ValueIsNotStrException):
-        raise exception()
+    except (ValueIsEmptyStrException, ValueIsNotStrException) as val_exc:
+        raise exception() from val_exc

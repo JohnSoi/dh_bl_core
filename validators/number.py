@@ -1,4 +1,5 @@
 """Модуль для проверки чисел."""
+
 from typing import Any
 
 from .exceptions import ValueIsNotIntException
@@ -39,5 +40,5 @@ def validate_is_int(value: Any) -> int:
     """
     if not isinstance(value, int) or isinstance(value, bool):
         raise ValueIsNotIntException()
-    else:
-        return value
+
+    return value

@@ -1,3 +1,4 @@
 """Пакет для конфигураций, используемых в приложении."""
-from .app import get_app_config, AppConfig
-from .pg_database import get_pg_database_config, PGDatabaseConfig
+
+from .app import AppConfig, get_app_config
+from .pg_database import PGDatabaseConfig, get_pg_database_config

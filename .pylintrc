@@ -1,0 +1,5 @@
+[MAIN]
+ignore-paths=.venv, tests
+[FORMAT]
+max-line-length=120
+max-module-lines=600

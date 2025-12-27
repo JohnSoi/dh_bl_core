@@ -1,4 +1,5 @@
 """Модуль конфигурации подключения к базе данных PostgreSQL."""
+
 from functools import lru_cache
 
 from pydantic import field_validator
@@ -35,6 +36,7 @@ class PGDatabaseConfig(BaseSettings):
         >>> print(sync_url)
         postgresql://user:password@localhost:5432/dbname
     """
+
     model_config = SettingsConfigDict(env_file=".env", env_prefix="DB_")
 
     host: str = "localhost"
@@ -59,7 +61,7 @@ class PGDatabaseConfig(BaseSettings):
             InvalidDbHostException: Если хост пустой или задан не строкой
         """
         return validators.validate_db_host(v)
-    
+
     @field_validator("username")
     @classmethod
     def validate_username(cls, v: str) -> str:
@@ -76,7 +78,7 @@ class PGDatabaseConfig(BaseSettings):
             InvalidUserNameException: Если имя пользователя пустое
         """
         return validators.validate_db_username(v)
-    
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
@@ -93,7 +95,7 @@ class PGDatabaseConfig(BaseSettings):
             InvalidDbPasswordException: Если пароль пустой
         """
         return validators.validate_db_password(v)
-    
+
     @field_validator("database")
     @classmethod
     def validate_database(cls, v: str) -> str:
@@ -110,7 +112,7 @@ class PGDatabaseConfig(BaseSettings):
             InvalidDbNameException: Если название базы данных пустое
         """
         return validators.validate_db_name(v)
-    
+
     @field_validator("port")
     @classmethod
     def validate_port(cls, v: int) -> int:
@@ -127,7 +129,7 @@ class PGDatabaseConfig(BaseSettings):
             InvalidDbPortException: Если порт вне допустимого диапазона (1-65535)
         """
         return validators.validate_db_port(v)
-    
+
     def get_sync_connection_url(self) -> str:
         """
         Генерирует строку подключения для синхронного драйвера.
@@ -147,7 +149,7 @@ class PGDatabaseConfig(BaseSettings):
             'postgresql://user:pass@localhost:5432/mydb'
         """
         return f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
-    
+
     def get_async_connection_url(self) -> str:
         """
         Генерирует строку подключения для асинхронного драйвера.
@@ -193,4 +195,4 @@ def get_pg_database_config() -> PGDatabaseConfig:
         >>> print(sync_url)
         postgresql://user:password@localhost:5432/dbname
     """
-    return PGDatabaseConfig()
+    return PGDatabaseConfig() # pyright: ignore[reportCallIssue]

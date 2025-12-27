@@ -29,6 +29,6 @@ def camel_to_snake_case(name: str) -> str:
         >>> camel_to_snake_case('number2Word')
         'number2_word'
     """
-    snake: str = re.sub(CAMEL_REGEX, SNAKE_REGEX_REPLACE, name).replace('__', '_')
+    snake: str = re.sub(CAMEL_REGEX, SNAKE_REGEX_REPLACE, name).replace("__", "_")
 
     return snake.lower()

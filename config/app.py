@@ -1,4 +1,5 @@
 """Модуль конфигурации приложения."""
+
 from functools import lru_cache
 
 from pydantic import field_validator
@@ -33,6 +34,7 @@ class AppConfig(BaseSettings):
         >>> if config.debug:
         ...     print("Режим отладки включен")
     """
+
     model_config = SettingsConfigDict(env_file=".env-example", env_prefix="APP_")
 
     debug: bool = False
@@ -99,4 +101,4 @@ def get_app_config() -> AppConfig:
         >>>     app_settings: AppConfig = get_app_config()
         >>>
     """
-    return AppConfig()
+    return AppConfig() # pyright: ignore[reportCallIssue]

@@ -1,4 +1,5 @@
 """Модуль исключений при базовых валидаторов"""
+
 from exceptions import UnprocessableEntityException
 
 
@@ -21,7 +22,7 @@ class ValueIsNotStrException(UnprocessableEntityException):
         Traceback (most recent call last):
         ...
         ValueIsNotStrException: Переданное значение не является строкой
-        
+
         >>> def validate_string(value):
         ...     if not isinstance(value, str):
         ...         raise ValueIsNotStrException()
@@ -30,6 +31,7 @@ class ValueIsNotStrException(UnprocessableEntityException):
         ...
         ValueIsNotStrException: Переданное значение не является строкой
     """
+
     _DETAILS: str = "Переданное значение не является строкой"
 
 
@@ -51,7 +53,7 @@ class ValueIsEmptyStrException(UnprocessableEntityException):
         Traceback (most recent call last):
         ...
         ValueIsEmptyStrException: Переданная строка не может быть пустой
-        
+
         >>> def validate_non_empty_string(value: str):
         ...     if not value or not value.strip():
         ...         raise ValueIsEmptyStrException()
@@ -60,6 +62,7 @@ class ValueIsEmptyStrException(UnprocessableEntityException):
         ...
         ValueIsEmptyStrException: Переданная строка не может быть пустой
     """
+
     _DETAILS: str = "Переданная строка не может быть пустой"
 
 
@@ -81,7 +84,7 @@ class ValueIsNotIntException(UnprocessableEntityException):
         Traceback (most recent call last):
         ...
         ValueIsNotIntException: Переданное значение не является числом
-        
+
         >>> def validate_number(value):
         ...     if not isinstance(value, int):
         ...         raise ValueIsNotIntException()
@@ -90,4 +93,5 @@ class ValueIsNotIntException(UnprocessableEntityException):
         ...
         ValueIsNotIntException: Переданное значение не является числом
     """
+
     _DETAILS: str = "Переданное значение не является числом"

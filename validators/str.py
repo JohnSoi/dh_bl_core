@@ -1,7 +1,8 @@
 """Модуль для проверки строк."""
+
 from typing import Any
 
-from .exceptions import ValueIsNotStrException, ValueIsEmptyStrException
+from .exceptions import ValueIsEmptyStrException, ValueIsNotStrException
 
 
 def validate_is_str(value: Any) -> str:
@@ -37,8 +38,8 @@ def validate_is_str(value: Any) -> str:
     """
     if not isinstance(value, str):
         raise ValueIsNotStrException()
-    else:
-        return value
+
+    return value
 
 
 def validate_is_not_empty_str(value: Any) -> str:
@@ -78,9 +79,9 @@ def validate_is_not_empty_str(value: Any) -> str:
         ...
         ValueIsNotStrException: Переданное значение не является строкой
     """
-    value: str = validate_is_str(value)
+    valid_value: str = validate_is_str(value)
 
-    if not value or not (value := value.strip()):
+    if not valid_value or not (valid_value := valid_value.strip()):
         raise ValueIsEmptyStrException()
 
-    return value
+    return valid_value
