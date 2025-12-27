@@ -195,4 +195,4 @@ def get_pg_database_config() -> PGDatabaseConfig:
         >>> print(sync_url)
         postgresql://user:password@localhost:5432/dbname
     """
-    return PGDatabaseConfig() # pyright: ignore[reportCallIssue]
+    return PGDatabaseConfig()  # pyright: ignore[reportCallIssue]

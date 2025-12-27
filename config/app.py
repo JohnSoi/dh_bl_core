@@ -101,4 +101,4 @@ def get_app_config() -> AppConfig:
         >>>     app_settings: AppConfig = get_app_config()
         >>>
     """
-    return AppConfig() # pyright: ignore[reportCallIssue]
+    return AppConfig()  # pyright: ignore[reportCallIssue]
