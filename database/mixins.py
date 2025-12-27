@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy.orm import Mapped
-from sqlalchemy import UUID as PG_UUID, Column, text, DateTime
+from sqlalchemy import UUID as PG_UUID, Column, text, DateTime, func
 
 
 class UuidMixin:
@@ -10,8 +10,8 @@ class UuidMixin:
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = Column(DateTime, server_default=text("now()"), nullable=False)
-    updated_at: Mapped[datetime] = Column(DateTime, server_default=text("now()"), nullable=False)
+    created_at: Mapped[datetime] = Column(DateTime, default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
     @property
     def is_created(self) -> bool:
