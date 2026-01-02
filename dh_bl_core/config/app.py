@@ -35,7 +35,7 @@ class AppConfig(BaseSettings):
         ...     print("Режим отладки включен")
     """
 
-    model_config = SettingsConfigDict(env_file=".env-example", env_prefix="APP_")
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="APP_", extra="allow")
 
     debug: bool = False
     name: str

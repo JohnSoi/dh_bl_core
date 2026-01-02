@@ -38,7 +38,7 @@ class PGDatabaseConfig(BaseSettings):
         postgresql://user:password@localhost:5432/dbname
     """
 
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="DB_")
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="DB_", extra="allow")
 
     host: str = "localhost"
     port: int = 5432
