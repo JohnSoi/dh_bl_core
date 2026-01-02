@@ -5,6 +5,7 @@
 в классе AppConfig. Тесты проверяют корректность формата версии в соответствии
 с требованиями YEAR.MONTH.PATCH и обработку различных сценариев ошибок.
 """
+import datetime
 
 import pytest
 
@@ -58,14 +59,16 @@ class TestAppConfigVersionValidation:
 
     def test_invalid_version_year(self):
         """Проверяет, что недопустимый год в версии вызывает исключение."""
+        current_year: int = datetime.datetime.now().year
 
+        error_year: int = current_year + 2
         # Тестирование годов вне допустимого диапазона
-        # Допустимый диапазон: от VERSION_MIN_YEAR (2025) до 2026 (2025 + 1)
+        # Допустимый диапазон: от VERSION_MIN_YEAR (2025) до error_year (current_year + 2)
         invalid_years = [
             "2024.12.1",  # Год меньше минимального
             "2023.1.1",  # Значительно меньший год
-            "2027.1.1",  # Год больше максимально допустимого (2025 + 1)
-            "2028.12.1",  # Значительно больший год
+            f"{error_year}.1.1",  # Год больше максимально допустимого (current_year + 2)
+            f"{error_year + 1}.12.1",  # Значительно больший год
         ]
 
         for version in invalid_years:

@@ -1,4 +1,5 @@
 """Модуль с миксинами для схемы данных."""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -22,6 +23,7 @@ class UuidMixin(BaseModel):
         >>> print(user.uuid)
         # UUID('...')
     """
+
     uuid: UUID
 
 
@@ -53,6 +55,7 @@ class TimestampMixin(BaseModel):
         >>> print(user.is_created)
         # False
     """
+
     created_at: datetime
     updated_at: datetime
     is_created: bool
@@ -79,6 +82,7 @@ class DeleteMixin(BaseModel):
         >>> print(user.is_deleted)
         # True
     """
+
     deleted_at: datetime | None
     is_deleted: bool
 
@@ -104,6 +108,6 @@ class DeactivateMixin(BaseModel):
         >>> print(user.is_deactivated)
         # True
     """
+
     deactivated_at: datetime | None
     is_deactivated: bool
-    

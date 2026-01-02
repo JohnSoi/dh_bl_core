@@ -1,4 +1,5 @@
 """Базовый класс для схем данных."""
+
 from pydantic import BaseModel
 
 
@@ -22,4 +23,5 @@ class BaseSchema(BaseModel):
         >>> print(user.id)
         # 1
     """
+
     id: int
