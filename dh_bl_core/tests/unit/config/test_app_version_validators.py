@@ -10,8 +10,12 @@ import datetime
 
 import pytest
 
-from dh_bl_core.config.exceptions import InvalidVersionFormatException, InvalidVersionMonthException, InvalidVersionYearException
-from dh_bl_core.config import validate_app_version
+from dh_bl_core.config.exceptions import (
+    InvalidVersionFormatException,
+    InvalidVersionMonthException,
+    InvalidVersionYearException,
+)
+from dh_bl_core.config.validators import validate_app_version
 
 
 class TestAppConfigVersionValidation:

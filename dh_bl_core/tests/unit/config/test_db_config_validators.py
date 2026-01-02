@@ -15,7 +15,7 @@ from dh_bl_core.config.exceptions import (
     InvalidDbPortException,
     InvalidDbUsernameException,
 )
-from dh_bl_core.config import (
+from dh_bl_core.config.validators import (
     validate_db_host,
     validate_db_name,
     validate_db_password,
