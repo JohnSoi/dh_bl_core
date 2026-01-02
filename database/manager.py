@@ -30,7 +30,7 @@ class AsyncDatabaseConnectionManager:
         >>> from settings import DatabaseSettings
         >>>
         >>> # Инициализация менеджера с настройками
-        >>> db_manager.init(DatabaseSettings(), async_mode=True)
+        >>> db_manager.init(DatabaseSettings())
         >>>
         >>> # Получение сессии через генератор
         >>> async for session in db_manager.get_session():
