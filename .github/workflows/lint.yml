@@ -36,15 +36,15 @@ jobs:
     
     - name: Run black
       run: |
-        uv run black --check ./
+        uv run black --check ./dh_bl_core
 
     - name: Run Pylint
       run: |
-        uv run pylint ./
+        uv run pylint ./dh_bl_core
 
     - name: Run ISort
       run: |
-        uv run isort --check ./
+        uv run isort --check ./dh_bl_core
 
     - name: Run PyRight
-      run:  uv run pyright ./
+      run:  uv run pyright ./dh_bl_core
