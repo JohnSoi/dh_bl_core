@@ -1,6 +1,6 @@
 """Модуль исключений при проверке параметров конфигурации приложения"""
 
-from exceptions import UnprocessableEntityException
+from dh_bl_core.exceptions import UnprocessableEntityException
 
 from . import consts
 

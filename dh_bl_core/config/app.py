@@ -5,7 +5,7 @@ from functools import lru_cache
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from config.validators import validate_app_version
+from dh_bl_core.config.validators import validate_app_version
 
 
 class AppConfig(BaseSettings):

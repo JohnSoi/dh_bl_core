@@ -4,8 +4,8 @@ from datetime import datetime
 from re import match
 from typing import Type
 
-from exceptions import BaseAppException
-from validators import (
+from dh_bl_core.exceptions import BaseAppException
+from dh_bl_core.validators import (
     ValueIsEmptyStrException,
     ValueIsNotIntException,
     ValueIsNotStrException,

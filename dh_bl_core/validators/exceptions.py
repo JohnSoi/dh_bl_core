@@ -1,6 +1,6 @@
 """Модуль исключений при базовых валидаторов"""
 
-from exceptions import UnprocessableEntityException
+from dh_bl_core.exceptions import UnprocessableEntityException
 
 
 class ValueIsNotStrException(UnprocessableEntityException):

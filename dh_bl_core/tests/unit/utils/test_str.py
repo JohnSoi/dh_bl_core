@@ -2,7 +2,7 @@
 Тесты для вспомогательных функций работы со строками.
 """
 
-from utils.str import camel_to_snake_case
+from dh_bl_core.utils.str import camel_to_snake_case
 
 
 class TestCamelToSnakeCase:

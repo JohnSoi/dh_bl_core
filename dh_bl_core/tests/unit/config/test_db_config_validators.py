@@ -8,14 +8,14 @@
 
 import pytest
 
-from config.exceptions import (
+from dh_bl_core.config.exceptions import (
     InvalidDbHostException,
     InvalidDbNameException,
     InvalidDbPasswordException,
     InvalidDbPortException,
     InvalidDbUsernameException,
 )
-from config.validators import (
+from dh_bl_core.config import (
     validate_db_host,
     validate_db_name,
     validate_db_password,

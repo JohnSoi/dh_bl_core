@@ -26,7 +26,7 @@ class AsyncDatabaseConnectionManager:
 
     Examples:
         >>> # Пример 1: Инициализация менеджера и получение сессии
-        >>> from database.manager import db_manager
+        >>> from dh_bl_core.database import db_manager
         >>> from settings import DatabaseSettings
         >>>
         >>> # Инициализация менеджера с настройками

@@ -8,8 +8,8 @@
 
 import pytest
 
-from validators.exceptions import ValueIsNotIntException
-from validators.number import validate_is_int
+from dh_bl_core.validators.exceptions import ValueIsNotIntException
+from dh_bl_core.validators.number import validate_is_int
 
 
 class TestIntValidators:

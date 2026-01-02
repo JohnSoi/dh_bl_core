@@ -1,6 +1,6 @@
 """Исключения при работе с БД."""
 
-from exceptions import InternalServerErrorException
+from dh_bl_core.exceptions import InternalServerErrorException
 
 
 class DbMangerNotInit(InternalServerErrorException):
@@ -15,7 +15,7 @@ class DbMangerNotInit(InternalServerErrorException):
 
     Examples:
         >>> # Пример 1: Попытка использовать менеджер до инициализации
-        >>> from database.manager import DatabaseManager
+        >>> from dh_bl_core.database import DatabaseManager
         >>> try:
         ...     db = DatabaseManager.get_instance()
         ...     db.execute_query("SELECT * FROM users")

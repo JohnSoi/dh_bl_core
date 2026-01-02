@@ -11,7 +11,7 @@ from sqlalchemy import Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column
 
-from utils import camel_to_snake_case
+from dh_bl_core.utils import camel_to_snake_case
 
 # Базовый класс для всех моделей SQLAlchemy
 Base = declarative_base()

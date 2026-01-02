@@ -8,8 +8,8 @@
 
 import pytest
 
-from validators.exceptions import ValueIsEmptyStrException, ValueIsNotStrException
-from validators.str import validate_is_not_empty_str, validate_is_str
+from dh_bl_core.validators.exceptions import ValueIsEmptyStrException, ValueIsNotStrException
+from dh_bl_core.validators.str import validate_is_not_empty_str, validate_is_str
 
 
 class TestStrValidators:
