@@ -1,6 +1,8 @@
 # pylint: disable=unnecessary-ellipsis
 """Типизация для работы БД."""
-from typing import Protocol
+from typing import Protocol, TypeVar
+
+from .model import BaseModel as BaseModelClass
 
 
 class DbSettingProtocol(Protocol):
@@ -85,3 +87,7 @@ class DbSettingProtocol(Protocol):
             >>> engine = create_async_engine(url, echo=settings.echo)
         """
         ...
+
+
+# Типизация для всех наследников базовой модели
+BaseModel = TypeVar("BaseModel", bound=BaseModelClass)

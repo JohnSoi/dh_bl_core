@@ -48,3 +48,9 @@ jobs:
 
     - name: Run PyRight
       run:  uv run pyright ./dh_bl_core
+
+    - name: Run Radon CC
+      run: uv run radon cc ./dh_bl_core -n C
+
+    - name: Run Radon MI
+      run: uv run radon mi ./dh_bl_core -n B
