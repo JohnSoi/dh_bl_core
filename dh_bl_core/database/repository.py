@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped
 
 from dh_bl_core.exceptions import NotFoundException
+from dh_bl_core.logging import LogManager
 
-from ..logging import LogManager
 from .exceptions import DeactivatedNotAllowed, EmptyDbSession, NoModelInRepository, NoPrimaryKeyInModel, NoUuidInModel
 from .types import BaseModel
 

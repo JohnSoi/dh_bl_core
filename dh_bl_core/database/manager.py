@@ -7,7 +7,8 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from ..logging import LogManager
+from dh_bl_core.logging import LogManager
+
 from .exceptions import DbMangerNotInit
 from .types import DbSettingProtocol
 

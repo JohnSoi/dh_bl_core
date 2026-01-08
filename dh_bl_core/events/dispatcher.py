@@ -2,7 +2,8 @@
 
 from typing import Any
 
-from ..logging import LogManager
+from dh_bl_core.logging import LogManager
+
 from .types import EventHandler, EventHandlerType, ListenerType
 
 
