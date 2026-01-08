@@ -86,6 +86,6 @@ class LogFormat(StrEnum):
 
 
 # Путь к файлу логов
-LOG_FILE_PATH: str = "logs/app.log"
+LOG_FILE_PATH: str = ".logs/app.log"
 # Размер файла логов
 LOG_FILE_ROTATION_SIZE: str = "100 MB"

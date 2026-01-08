@@ -10,4 +10,4 @@ wheels/
 
 uv.lock
 
-logs
+.logs

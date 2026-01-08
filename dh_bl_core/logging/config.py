@@ -86,7 +86,7 @@ class FileConfig(BaseSettings):
         >>> logging_config = LoggingConfig()
         >>> file_settings = logging_config.file
         >>> print(f"Файл логов: {file_settings.path}")
-        Файл логов: logs/app.log
+        Файл логов: .logs/app.log
     """
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="LOG_FILE_", extra="allow")
@@ -116,7 +116,7 @@ class LoggingConfig(BaseSettings):
         >>> print(f"Консоль включена: {logging_config.console.enable}")
         Консоль включена: True
         >>> print(f"Файл логов: {logging_config.file.path}")
-        Файл логов: logs/app.log
+        Файл логов: .logs/app.log
         >>>
         >>> # Доступ к вложенным настройкам
         >>> console_level = logging_config.console.level
