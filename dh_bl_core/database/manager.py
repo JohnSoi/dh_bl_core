@@ -3,14 +3,13 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
-from loguru import Logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from ..logging import LogManager
 from .exceptions import DbMangerNotInit
 from .types import DbSettingProtocol
-from ..logging import LogManager
 
 
 class AsyncDatabaseConnectionManager:
@@ -21,8 +20,9 @@ class AsyncDatabaseConnectionManager:
     а также предоставляет контекстные менеджеры для работы с сессиями.
 
     Attributes:
-        _instance (Optional[AsyncDatabaseConnectionManager]):
-            Статический экземпляр класса для реализации паттерна Singleton.
+        _INSTANCE (Optional[AsyncDatabaseConnectionManager]):
+            Статический экземпляр класса для реализации паттерна Singleton.\
+        _LOGGER (logging.Logger): Логгер для отладки и логирования.
         _engine (Optional[AsyncEngine]): Движок SQLAlchemy для подключения к БД.
         _session_maker (Optional[async_sessionmaker]): Фабрика сессий SQLAlchemy.
 
@@ -50,9 +50,9 @@ class AsyncDatabaseConnectionManager:
     """
 
     _INSTANCE: Optional["AsyncDatabaseConnectionManager"] = None
-    _ENGINE: AsyncEngine | None = None
-    _SESSION_MAKER: async_sessionmaker | None = None
-    _LOGGER: Logger = LogManager("db").logger
+    _LOGGER = LogManager("db").logger
+    _engine: AsyncEngine | None = None
+    _session_maker: async_sessionmaker | None = None
 
     def __new__(cls):
         """
@@ -125,15 +125,15 @@ class AsyncDatabaseConnectionManager:
         """
         self._LOGGER.debug("Инициализация менеджера подключения к БД")
         # Мы уже инициализировали соединение - выходим
-        if self._ENGINE is not None:
+        if self._engine is not None:
             self._LOGGER.warning("Повторная инициализация менеджера подключения к БД")
             return
 
         database_url: str = db_settings.get_async_connection_url()
 
-        self._ENGINE = create_async_engine(url=database_url, echo=db_settings.echo)
-        self._SESSION_MAKER = async_sessionmaker(
-            bind=self._ENGINE,
+        self._engine = create_async_engine(url=database_url, echo=db_settings.echo)
+        self._session_maker = async_sessionmaker(
+            bind=self._engine,
             class_=AsyncSession,
             expire_on_commit=False,
             autocommit=False,
@@ -162,11 +162,11 @@ class AsyncDatabaseConnectionManager:
             ...         result = await conn.execute(text("SELECT 1"))
             ...         print(await result.scalar())
         """
-        if self._ENGINE is None:
+        if self._engine is None:
             self._LOGGER.error("Движок подключения к БД не инициализирован")
             raise DbMangerNotInit()
 
-        return self._ENGINE
+        return self._engine
 
     @property
     def session_maker(self) -> async_sessionmaker | sessionmaker:
@@ -191,11 +191,11 @@ class AsyncDatabaseConnectionManager:
             ...     finally:
             ...         await session.close()
         """
-        if self._SESSION_MAKER is None:
+        if self._session_maker is None:
             self._LOGGER.error("Фабрика сессий не инициализирована")
             raise DbMangerNotInit()
 
-        return self._SESSION_MAKER
+        return self._session_maker
 
     async def get_session(self) -> AsyncGenerator[AsyncSession | Session, None]:
         """
@@ -246,11 +246,11 @@ class AsyncDatabaseConnectionManager:
             ...     await db_manager.close()  # Закрываем текущее соединение
             ...     db_manager.init(new_settings, async_mode=True)  # Инициализируем с новыми настройками
         """
-        if self._ENGINE is None:
+        if self._engine is None:
             self._LOGGER.warning("Попытка закрыть неинициализированный менеджер подключения к БД")
             return
 
-        await self._ENGINE.dispose()
+        await self._engine.dispose()
         self._LOGGER.info("Соединение с БД закрыто")
 
     async def health_check(self) -> bool:

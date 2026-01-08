@@ -1,9 +1,9 @@
 """Диспетчер событий"""
-from logging import Logger
+
 from typing import Any
 
-from .types import EventHandler, EventHandlerType, ListenerType
 from ..logging import LogManager
+from .types import EventHandler, EventHandlerType, ListenerType
 
 
 class EventDispatcher:
@@ -41,7 +41,7 @@ class EventDispatcher:
     """
 
     _INSTANCE = None
-    _LOGGER: Logger = LogManager("event").logger
+    _LOGGER = LogManager("event").logger
 
     def __new__(cls):
         """

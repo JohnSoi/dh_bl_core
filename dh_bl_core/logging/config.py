@@ -1,8 +1,8 @@
 """Конфигурация логирования."""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .consts import LogLevel, LogFormat, LOG_FILE_PATH, LOG_FILE_ROTATION_SIZE
-from dh_bl_core.config import get_app_config
+from .consts import LOG_FILE_PATH, LOG_FILE_ROTATION_SIZE, LogFormat, LogLevel
 
 
 class ConsoleConfig(BaseSettings):
@@ -41,9 +41,10 @@ class ConsoleConfig(BaseSettings):
         >>> print(f"Уровень логирования: {console_settings.level}")
         Уровень логирования: LogLevel.INFO
     """
+
     model_config = SettingsConfigDict(env_file=".env", env_prefix="LOG_CONSOLE_", extra="allow")
 
-    enable: bool = get_app_config().debug
+    enable: bool = False
     color: bool = True
     level: LogLevel = LogLevel.DEBUG
     format: LogFormat = LogFormat.CONSOLE
@@ -87,6 +88,7 @@ class FileConfig(BaseSettings):
         >>> print(f"Файл логов: {file_settings.path}")
         Файл логов: logs/app.log
     """
+
     model_config = SettingsConfigDict(env_file=".env", env_prefix="LOG_FILE_", extra="allow")
 
     enable: bool = True
@@ -131,8 +133,8 @@ class LoggingConfig(BaseSettings):
         >>> # Создание менеджера логирования с кастомной конфигурацией
         >>> logger_manager = LogManager("app", config)
     """
+
     model_config = SettingsConfigDict(env_file=".env", env_prefix="LOG_", extra="allow")
 
     console: ConsoleConfig = ConsoleConfig()
     file: FileConfig = FileConfig()
-

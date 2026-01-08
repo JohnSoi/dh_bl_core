@@ -4,16 +4,15 @@ from datetime import UTC, datetime
 from typing import Any, Generic, Type
 from uuid import UUID, uuid4
 
-from loguru import Logger
 from sqlalchemy import Delete, Result, Select, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped
 
 from dh_bl_core.exceptions import NotFoundException
 
+from ..logging import LogManager
 from .exceptions import DeactivatedNotAllowed, EmptyDbSession, NoModelInRepository, NoPrimaryKeyInModel, NoUuidInModel
 from .types import BaseModel
-from ..logging import LogManager
 
 
 class BaseRepository(Generic[BaseModel]):
@@ -56,7 +55,7 @@ class BaseRepository(Generic[BaseModel]):
 
     _MODEL: Type[BaseModel]
     _LIMIT: int = 100
-    _LOGGER: Logger = LogManager("repos").logger
+    _LOGGER = LogManager("repos").logger
 
     def __init__(self, db_session: AsyncSession) -> None:
         """
@@ -82,12 +81,6 @@ class BaseRepository(Generic[BaseModel]):
             >>>
             >>> # Пример 1: Создание репозитория с валидной сессией
             >>> repo = UserRepository(db_session)
-
-            >>> # Пример 2: Попытка создать репозиторий без сессии (вызовет исключение)
-            >>> try:
-            ...     repo = UserRepository(None)
-            ... except EmptyDbSession as e:
-            ...     print(f"Ошибка инициализации: {e}")
         """
 
         if not db_session:
@@ -231,8 +224,7 @@ class BaseRepository(Generic[BaseModel]):
             ...     db_session = await db_manager.get_db_session()
             ...     user_repo = UserRepository(db_session)
             ...     # Пример 1: Получение пользователя по UUID
-            ...     user_uuid = UUID("a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8")
-            ...     user = await user_repo.get_by_uuid(user_uuid)
+            ...     user = await user_repo.get_by_uuid(UUID("a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"))
             ...     print(f"Найден пользователь: {user.name}")
             ...
             ...     # Пример 2: Попытка получить несуществующую запись
@@ -463,17 +455,19 @@ class BaseRepository(Generic[BaseModel]):
             ...     user = await user_repo.get(123)
             ...     print(f"Пользователь снова активен: {user.deactivated_at is None}")
         """
-        self._LOGGER.info(f"Переключение деактивации для записи с id {entity_id} в репозитории {self.__class__.__name__}")
+        self._LOGGER.info(
+            f"Переключение деактивации для записи с id {entity_id} в репозитории {self.__class__.__name__}"
+        )
         if not hasattr(self._MODEL, "deactivated_at"):
             raise DeactivatedNotAllowed(self._MODEL.__name__)
 
         entity: BaseModel = await self.get(entity_id)
 
         if entity.deactivated_at:
-            self._LOGGER.debug(f"Очистка поля deactivated_at")
+            self._LOGGER.debug("Очистка поля deactivated_at")
             entity.deactivated_at = None
         else:
-            self._LOGGER.debug(f"Установка поля deactivated_at")
+            self._LOGGER.debug("Установка поля deactivated_at")
             entity.deactivated_at = datetime.now(UTC)
 
         self._db_session.add(entity)
@@ -556,7 +550,7 @@ class BaseRepository(Generic[BaseModel]):
 
         result: Result[BaseModel] = await self._db_session.execute(stmt)
 
-        self._LOGGER.info(f"Получено {result.rowcount} записей из репозитория {self.__class__.__name__}")
+        self._LOGGER.info(f"Получены записи из репозитория {self.__class__.__name__}")
 
         return list(result.scalars().all())
 
@@ -578,12 +572,8 @@ class BaseRepository(Generic[BaseModel]):
         Examples:
             >>> # Пример: Автоматическая генерация полей при создании
             >>> # (внутреннее использование при вызове create)
-            >>> payload = {"name": "Test"}
-            >>> self._before_create(payload)
-            >>> # После вызова в payload могут появиться:
-            >>> # - "uuid": сгенерированный UUID
-            >>> # - "created_at": текущая временная метка
-            >>> # - "updated_at": текущая временная метка
+            >>> new_payload = {"name": "Test"}
+            >>> self._before_create(new_payload)
         """
         if hasattr(self._MODEL, "uuid") and not payload.get("uuid"):
             self._LOGGER.debug(f"Генерация UUID для модели {self._MODEL.__name__}")

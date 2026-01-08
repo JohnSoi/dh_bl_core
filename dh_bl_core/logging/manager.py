@@ -1,6 +1,7 @@
+"""Менеджер логирования."""
 from sys import stdout
 
-from loguru import logger, Logger
+from loguru import logger
 
 from .config import LoggingConfig
 
@@ -49,6 +50,7 @@ class LogManager:
         ...         # Логика создания пользователя
         ...         self._logger.info("Пользователь успешно создан")
     """
+
     def __init__(self, prefix: str = "", settings: LoggingConfig | None = None):
         """
         Инициализирует менеджер логирования с указанными настройками.
@@ -86,7 +88,7 @@ class LogManager:
         self._configure_logger()
 
     @property
-    def logger(self) -> Logger:
+    def logger(self):
         """
         Возвращает настроенный экземпляр логгера.
 
@@ -129,7 +131,7 @@ class LogManager:
                 stdout,
                 level=self._settings.console.level,
                 colorize=self._settings.console.color,
-                format=self._settings.console.format
+                format=self._settings.console.format,
             )
 
         if self._settings.file.enable:
@@ -137,5 +139,53 @@ class LogManager:
                 self._settings.file.path,
                 level=self._settings.file.level,
                 rotation=self._settings.file.rotation,
-                format=self._settings.file.format
+                format=self._settings.file.format,
             )
+
+    def apply_new_settings(self, settings: LoggingConfig) -> None:
+        """
+        Применяет новые настройки логирования во время выполнения.
+
+        Метод позволяет динамически изменять конфигурацию логирования приложения
+        без необходимости создания нового экземпляра менеджера. Полностью перенастраивает
+        логгер с учетом новых настроек.
+
+        Args:
+            settings (LoggingConfig): Новые настройки логирования для применения.
+
+        Note:
+            Метод удаляет все существующие обработчики логгера перед применением
+            новых настроек, что может привести к потере незаписанных сообщений.
+            Рекомендуется использовать с осторожностью в production-среде.
+
+        Examples:
+            >>> from dh_bl_core.logging import LogManager
+            >>> from dh_bl_core.logging.config import LoggingConfig
+            >>> from dh_bl_core.logging.consts import LogLevel
+            >>>
+            >>> # Создание менеджера с настройками по умолчанию
+            >>> logger_manager = LogManager("app")
+            >>> logger = logger_manager.logger
+            >>> logger.info("Сообщение с настройками по умолчанию")
+            >>>
+            >>> # Изменение настроек во время выполнения
+            >>> new_settings = LoggingConfig()
+            >>> new_settings.console.level = LogLevel.WARNING
+            >>> new_settings.file.enable = False
+            >>> logger_manager.apply_new_settings(new_settings)
+            >>> logger.debug("Это сообщение не будет выведено")
+            >>> logger.warning("Это сообщение будет выведено")
+            >>>
+            >>> # Пример динамического изменения уровня логирования
+            >>> def toggle_debug_mode(enable: bool):
+            ...     new_config = LoggingConfig()
+            ...     new_config.console.level = LogLevel.DEBUG if enable else LogLevel.INFO
+            ...     logger_manager.apply_new_settings(new_config)
+            >>>
+            >>> toggle_debug_mode(True)  # Включение отладочного режима
+            >>> logger.debug("Отладочная информация включена")
+        """
+        logger.remove()
+
+        self._settings = settings
+        self._configure_logger()

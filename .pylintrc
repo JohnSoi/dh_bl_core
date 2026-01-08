@@ -2,4 +2,4 @@
 ignore-paths=.venv, tests, dh_bl_core/tests
 [FORMAT]
 max-line-length=120
-max-module-lines=800
+max-module-lines=1000

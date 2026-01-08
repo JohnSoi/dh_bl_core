@@ -1,4 +1,5 @@
 """Константы для логирования."""
+
 from enum import StrEnum
 
 
@@ -37,6 +38,7 @@ class LogLevel(StrEnum):
         >>> LogLevel.DEBUG < LogLevel.INFO
         True
     """
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     ERROR = "ERROR"
@@ -78,11 +80,12 @@ class LogFormat(StrEnum):
         >>> file_config = FileConfig()
         >>> file_config.format = LogFormat.FILE
     """
+
     CONSOLE = "extra[prefix] <green>{time}</green> <level>{message}</level>"
     FILE = "[{level}][{extra[prefix]}] ({time}): {message}"
 
 
 # Путь к файлу логов
-LOG_FILE_PATH: str = "logs/{level}.log"
+LOG_FILE_PATH: str = "logs/{time}.log"
 # Размер файла логов
 LOG_FILE_ROTATION_SIZE: str = "100 MB"
