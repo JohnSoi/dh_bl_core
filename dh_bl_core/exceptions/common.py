@@ -2,6 +2,8 @@
 
 from fastapi import HTTPException, status
 
+from dh_bl_core.logging import LogManager
+
 
 class BaseAppException(HTTPException):
     """
@@ -48,6 +50,7 @@ class BaseAppException(HTTPException):
 
     _DETAILS: str = ""
     _STATUS_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+    _LOGGER = LogManager("exc").logger
 
     def __init__(self, details: str | None = None, status_code: int | None = None):
         """
@@ -75,10 +78,17 @@ class BaseAppException(HTTPException):
             400
         """
         if not any((details, self._DETAILS)):
+            self._LOGGER.error("Нельзя создать исключение без пояснительного сообщения.")
             raise ValueError("Нельзя создать исключение без пояснительного сообщения.")
 
         if not any((status_code, self._STATUS_CODE)):
+            self._LOGGER.error("Нельзя создать исключение без HTTP-кода.")
             raise ValueError("Нельзя создать исключение без HTTP-кода.")
+
+        self._LOGGER.error(
+            f"Исключение {self.__class__.__name__} с кодом {status_code}, детали: {details}. "
+            f"Traceback: {self.__traceback__}"
+        )
 
         super().__init__(
             detail=details or self._DETAILS,

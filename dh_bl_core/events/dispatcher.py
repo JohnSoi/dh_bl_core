@@ -41,7 +41,7 @@ class EventDispatcher:
         ...     # Второй вызов не выполнит обработчик, так как он был одноразовым
     """
 
-    _INSTANCE = None
+    _instance = None
     _LOGGER = LogManager("event").logger
 
     def __new__(cls):
@@ -64,14 +64,14 @@ class EventDispatcher:
             и обеспечивает паттерн Синглтон. Должен вызываться интерпретатором Python
             автоматически при создании экземпляра класса.
         """
-        if cls._INSTANCE:
+        if cls._instance:
             cls._LOGGER.debug("EventDispatcher уже создан")
-            return cls._INSTANCE
+            return cls._instance
 
-        cls._INSTANCE = super(EventDispatcher, cls).__new__(cls)
-        cls._INSTANCE._listeners = {}
+        cls._instance = super(EventDispatcher, cls).__new__(cls)
+        cls._instance._listeners = {}
         cls._LOGGER.debug("EventDispatcher создан")
-        return cls._INSTANCE
+        return cls._instance
 
     def __init__(self):
         """
