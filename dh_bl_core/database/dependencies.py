@@ -24,11 +24,15 @@ async def get_db() -> AsyncGenerator[AsyncSession | Session, None]:
 
     Examples:
         >>> from fastapi import Depends
+        >>> from dh_bl_core.database import BaseModel
+        >>> class User(BaseModel):
+        ...     pass
         >>>
         >>> async def get_user(user_id: int, db: Session = Depends(get_db)):
         ...     return await db.get(User, user_id)
         ...
-        >>> user = await get_user(123)
+        >>> async def main() -> None:
+        ...     user = await get_user(123)
 
     Notes:
         Не выполняет коммит автоматически — вызовите db.commit() вручную при необходимости.

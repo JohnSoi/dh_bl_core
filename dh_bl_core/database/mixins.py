@@ -23,11 +23,12 @@ class UuidMixin:
     Examples:
         >>> from sqlalchemy import create_engine, Column, Integer, String
         >>> from sqlalchemy.orm import sessionmaker
+        >>> from dh_bl_core.database import BaseModel
         >>>
         >>> engine = create_engine('postgresql://user:pass@localhost/db')
         >>> SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         >>>
-        >>> class User(Base, UuidMixin):
+        >>> class User(BaseModel, UuidMixin):
         ...     __tablename__ = 'users'
         ...     id = Column(Integer, primary_key=True)
         ...     name = Column(String, nullable=False)
@@ -64,11 +65,12 @@ class TimestampMixin:
     Examples:
         >>> from sqlalchemy import create_engine, Column, Integer, String
         >>> from sqlalchemy.orm import sessionmaker
+        >>> from dh_bl_core.database import BaseModel
         >>>
         >>> engine = create_engine('postgresql://user:pass@localhost/db')
         >>> SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         >>>
-        >>> class Post(Base, TimestampMixin):
+        >>> class Post(BaseModel, TimestampMixin):
         ...     __tablename__ = 'posts'
         ...     id = Column(Integer, primary_key=True)
         ...     title = Column(String, nullable=False)
@@ -107,6 +109,13 @@ class TimestampMixin:
                   False если запись была обновлена после создания.
 
         Examples:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class Post(BaseModel):
+            ...     pass
+            >>>
+            >>> db = db_manager()
+            >>>
             >>> post = Post(title='New Post')
             >>> db.add(post)
             >>> db.commit()
@@ -138,11 +147,13 @@ class SoftDeleteMixin:
     Examples:
         >>> from sqlalchemy import create_engine, Column, Integer, String
         >>> from sqlalchemy.orm import sessionmaker
+        >>> from dh_bl_core.database import BaseModel
+        >>> from datetime import datetime, UTC
         >>>
         >>> engine = create_engine('postgresql://user:pass@localhost/db')
         >>> SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         >>>
-        >>> class Document(Base, SoftDeleteMixin):
+        >>> class Document(BaseModel, SoftDeleteMixin):
         ...     __tablename__ = 'documents'
         ...     id = Column(Integer, primary_key=True)
         ...     name = Column(String, nullable=False)
@@ -157,7 +168,7 @@ class SoftDeleteMixin:
         False
         >>>
         >>> # Помечаем документ как удаленный
-        >>> doc.deleted_at = datetime.utcnow()
+        >>> doc.deleted_at = datetime.now(UTC)
         >>> db.commit()
         >>> print(doc.is_deleted)
         True
@@ -184,13 +195,21 @@ class SoftDeleteMixin:
                   False если запись активна (deleted_at is None).
 
         Examples:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>> from datetime import datetime, UTC
+            >>>
+            >>> class Document(BaseModel):
+            ...     pass
+            >>>
+            >>> db = db_manager()
+            >>>
             >>> doc = Document(name='Report')
             >>> db.add(doc)
             >>> db.commit()
             >>> print(doc.is_deleted)
             False
             >>>
-            >>> doc.deleted_at = datetime.utcnow()
+            >>> doc.deleted_at = datetime.now(UTC)
             >>> db.commit()
             >>> print(doc.is_deleted)
             True
@@ -214,13 +233,15 @@ class DeactivateMixin:
                              False если запись активна.
 
     Examples:
-        >>> from sqlalchemy import create_engine, Integer, String
+        >>> from sqlalchemy import create_engine, Integer, String, Column
         >>> from sqlalchemy.orm import sessionmaker
+        >>> from dh_bl_core.database import BaseModel
+        >>> from datetime import datetime, UTC
         >>>
         >>> engine = create_engine('postgresql://user:pass@localhost/db')
         >>> SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         >>>
-        >>> class User(Base, DeactivateMixin):
+        >>> class User(BaseModel, DeactivateMixin):
         ...     __tablename__ = 'users'
         ...     id = Column(Integer, primary_key=True)
         ...     username = Column(String, nullable=False)
@@ -235,7 +256,7 @@ class DeactivateMixin:
         False
         >>>
         >>> # Деактивация пользователя
-        >>> user.deactivated_at = datetime.utcnow()
+        >>> user.deactivated_at = datetime.now(UTC)
         >>> db.commit()
         >>> print(user.is_deactivated)
         True
@@ -262,6 +283,13 @@ class DeactivateMixin:
                   False если запись активна (deactivated_at is None).
 
         Examples:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> db = db_manager()
+            >>>
             >>> user = User(username='john_doe')
             >>> db.add(user)
             >>> db.commit()

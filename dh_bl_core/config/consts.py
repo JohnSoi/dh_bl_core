@@ -14,7 +14,3 @@ VERSION_MIN_YEAR: int = 2025
 MIN_VERSION_MONTH: int = 1
 # Максимально допустимое значение месяца в версии приложения.
 MAX_VERSION_MONTH: int = 12
-# Минимально допустимое значение сетевого порта.
-MIN_PORT_NUMBER: int = 1
-# Максимально допустимое значение сетевого порта.
-MAX_PORT_NUMBER: int = 65535

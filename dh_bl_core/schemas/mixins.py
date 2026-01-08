@@ -14,6 +14,7 @@ class UuidMixin(BaseModel):
         uuid (UUID): Уникальный идентификатор объекта.
 
     Example:
+        >>> from uuid import uuid4
         >>> from dh_bl_core.schemas import UuidMixin
         >>>
         >>> class User(UuidMixin):

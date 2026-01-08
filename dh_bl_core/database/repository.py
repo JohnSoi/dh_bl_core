@@ -28,13 +28,20 @@ class BaseRepository(Generic[BaseModel]):
         _db_session (AsyncSession): Асинхронная сессия SQLAlchemy для работы с БД.
 
     Examples:
+        >>> from dh_bl_core.database import BaseModel, db_manager
+        >>>
+        >>> class User(BaseModel):
+        ...     pass
+        >>>
         >>> # Пример 1: Определение конкретного репозитория
         >>> class UserRepository(BaseRepository):
         ...     _MODEL = User
         ...
-        >>> repo = UserRepository(db_session)
-        >>> user = await repo.create({"name": "John", "email": "john@example.com"})
-        >>> retrieved_user = await repo.get(user.id)
+        >>> async def main():
+        ...     db_session = await db_manager.get_db_session()
+        ...     repo = UserRepository(db_session)
+        ...     user = await repo.create({"name": "John", "email": "john@example.com"})
+        ...     retrieved_user = await repo.get(user.id)
 
         >>> # Пример 2: Использование в сервисном слое
         >>> class UserService:
@@ -63,6 +70,13 @@ class BaseRepository(Generic[BaseModel]):
             NoModelInRepository: Если в репозиторий не передана модель данных.
 
         Examples:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            >>>
             >>> # Пример 1: Создание репозитория с валидной сессией
             >>> repo = UserRepository(db_session)
 
@@ -95,20 +109,36 @@ class BaseRepository(Generic[BaseModel]):
             BaseModelType: Созданная и сохраненная в БД модель.
 
         Examples:
-            >>> # Пример 1: Создание нового пользователя
-            >>> user_data = {
-            ...     "name": "John Doe",
-            ...     "email": "john@example.com",
-            ...     "age": 30
-            ... }
-            >>> user = await user_repo.create(user_data)
-            >>> print(f"Создан пользователь с ID: {user.id}")
-
-            >>> # Пример 2: Создание записи с автоматической генерацией полей
-            >>> # (если модель имеет поля uuid, created_at)
-            >>> product = await product_repo.create({"name": "Laptop"})
-            >>> print(f"UUID продукта: {product.uuid}")
-            >>> print(f"Дата создания: {product.created_at}")
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            >>> class Product(BaseModel):
+            ...     pass
+            >>> class ProductRepository(BaseRepository):
+            ...     _MODEL = Product
+            >>>
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     # Пример 1: Создание репозитория с валидной сессией
+            ...     user_repo = UserRepository(db_session)
+            ...     # Пример 1: Создание нового пользователя
+            ...     user_data = {
+            ...         "name": "John Doe",
+            ...         "email": "john@example.com",
+            ...         "age": 30
+            ...     }
+            ...     user = await user_repo.create(user_data)
+            ...     print(f"Создан пользователь с ID: {user.id}")
+            ...
+            ...     # Пример 2: Создание записи с автоматической генерацией полей
+            ...     # (если модель имеет поля uuid, created_at)
+            ...     product_repo = ProductRepository(db_session)
+            ...     product = await product_repo.create({"name": "Laptop"})
+            ...     print(f"UUID продукта: {product.uuid}")
+            ...     print(f"Дата создания: {product.created_at}")
         """
         self._before_create(payload)
         entity: BaseModel = self._get_filled_model(payload)
@@ -133,16 +163,28 @@ class BaseRepository(Generic[BaseModel]):
             BaseModelType: Найденная модель или None, если запись не найдена.
 
         Examples:
-            >>> # Пример 1: Получение пользователя по id
-            >>> user_repo = UserRepository(db_session)
-            >>> user = await user_repo.get(123)
-            >>> if user:
-            ...     print(f"Найден пользователь: {user.name}")
-            ... else:
-            ...     print("Пользователь не найден")
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            ...
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     # Пример 1: Получение пользователя по id
+            ...     user_repo = UserRepository(db_session)
+            ...     user = await user_repo.get(123)
+            ...     if user:
+            ...         print(f"Найден пользователь: {user.name}")
+            ...     else:
+            ...         print("Пользователь не найден")
 
             >>> # Пример 2: Проверка существования записи
             >>> async def check_user_exists(user_id: int) -> bool:
+            ...     db_session = await db_manager.get_db_session()
+            ...     user_repo = UserRepository(db_session)
             ...     try:
             ...         return await user_repo.get(user_id)
             ...     except NotFoundException:
@@ -169,23 +211,34 @@ class BaseRepository(Generic[BaseModel]):
             NotFoundException: Если запись с указанным UUID не найдена.
 
         Examples:
-            >>> # Пример 1: Получение пользователя по UUID
-            >>> user_uuid = UUID("a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8")
-            >>> user = await user_repo.get_by_uuid(user_uuid)
-            >>> print(f"Найден пользователь: {user.name}")
-
-            >>> # Пример 2: Попытка получить несуществующую запись
-            >>> from uuid import UUID
-            >>> non_existent_uuid = UUID("00000000-0000-0000-0000-000000000000")
-            >>> try:
-            ...     user = await user_repo.get_by_uuid(non_existent_uuid)
-            ... except NotFoundException:
-            ...     print("Пользователь с таким UUID не найден")
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            ...
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     user_repo = UserRepository(db_session)
+            ...     # Пример 1: Получение пользователя по UUID
+            ...     user_uuid = UUID("a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8")
+            ...     user = await user_repo.get_by_uuid(user_uuid)
+            ...     print(f"Найден пользователь: {user.name}")
+            ...
+            ...     # Пример 2: Попытка получить несуществующую запись
+            ...     from uuid import UUID
+            ...     non_existent_uuid = UUID("00000000-0000-0000-0000-000000000000")
+            ...     try:
+            ...         user = await user_repo.get_by_uuid(non_existent_uuid)
+            ...     except NotFoundException:
+            ...         print("Пользователь с таким UUID не найден")
         """
         if not hasattr(self._MODEL, "uuid"):
             raise NoUuidInModel(self._MODEL.__name__)
 
-        return await self._get_by_field_name_and_value(self._MODEL.uuid, uuid)
+        return await self._get_by_field_name_and_value(getattr(self._MODEL, "uuid"), uuid)
 
     async def update(self, payload: dict) -> BaseModel:
         """
@@ -206,21 +259,32 @@ class BaseRepository(Generic[BaseModel]):
             NotFoundException: Если запись с указанным id или uuid не найдена.
 
         Examples:
-            >>> # Пример 1: Обновление пользователя по id
-            >>> update_data = {
-            ...     "id": 123,
-            ...     "name": "Jane Doe",
-            ...     "email": "jane@example.com"
-            ... }
-            >>> updated_user = await user_repo.update(update_data)
-            >>> print(f"Обновлено: {updated_user.name}, {updated_user.updated_at}")
-
-            >>> # Пример 2: Обновление по uuid
-            >>> update_data = {
-            ...     "uuid": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
-            ...     "status": "active"
-            ... }
-            >>> updated_entity = await repo.update(update_data)
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            ...
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     user_repo = UserRepository(db_session)
+            ...     # Пример 1: Обновление пользователя по id
+            ...     update_data = {
+            ...         "id": 123,
+            ...         "name": "Jane Doe",
+            ...         "email": "jane@example.com"
+            ...     }
+            ...     updated_user = await user_repo.update(update_data)
+            ...     print(f"Обновлено: {updated_user.name}, {updated_user.updated_at}")
+            ...
+            ...     # Пример 2: Обновление по uuid
+            ...     update_data = {
+            ...         "uuid": "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8",
+            ...         "status": "active"
+            ...     }
+            ...     updated_entity = await user_repo.update(update_data)
         """
         if not payload.get("id") and not payload.get("uuid"):
             raise NoPrimaryKeyInModel(self._MODEL.__name__)
@@ -259,15 +323,33 @@ class BaseRepository(Generic[BaseModel]):
             NotFoundException: Если запись с указанным id не найдена.
 
         Examples:
-            >>> # Пример 1: Мягкое удаление пользователя (с полем deleted_at)
-            >>> result = await user_repo.delete(123)
-            >>> if result:
-            ...     print("Пользователь успешно помечен как удаленный")
-
-            >>> # Пример 2: Физическое удаление записи (без поля deleted_at)
-            >>> result = await log_repo.delete(456)
-            >>> if result:
-            ...     print("Запись журнала физически удалена из БД")
+            >>> from dh_bl_core.database import BaseModel, db_manager, SoftDeleteMixin
+            >>>
+            >>> class User(BaseModel, SoftDeleteMixin):
+            ...     pass
+            ...
+            >>> class Log(BaseModel):
+            ...     pass
+            >>>
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            ...
+            >>> class LogRepository(BaseRepository):
+            ...     _MODEL = Log
+            ...
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     user_repo = UserRepository(db_session)
+            ...     log_repo = LogRepository(db_session)
+            ...     # Пример 1: Мягкое удаление пользователя (с полем deleted_at)
+            ...     result = await user_repo.delete(123)
+            ...     if result:
+            ...         print("Пользователь успешно помечен как удаленный")
+            ...
+            ...     # Пример 2: Физическое удаление записи (без поля deleted_at)
+            ...     result = await log_repo.delete(456)
+            ...     if result:
+            ...         print("Запись журнала физически удалена из БД")
         """
         entity: BaseModel = await self.get(entity_id)
 
@@ -301,11 +383,22 @@ class BaseRepository(Generic[BaseModel]):
             NotFoundException: Если запись с указанным UUID не найдена.
 
         Examples:
-            >>> # Пример: Удаление пользователя по UUID
-            >>> user_uuid = UUID("a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8")
-            >>> result = await user_repo.delete_by_uuid(user_uuid)
-            >>> if result:
-            ...     print("Пользователь успешно удален")
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            ...
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     user_repo = UserRepository(db_session)
+            ...     # Пример: Удаление пользователя по UUID
+            ...     user_uuid = UUID("a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8")
+            ...     result = await user_repo.delete_by_uuid(user_uuid)
+            ...     if result:
+            ...         print("Пользователь успешно удален")
         """
         entity: BaseModel = await self.get_by_uuid(uuid)
         return await self.delete(entity.id)
@@ -330,17 +423,28 @@ class BaseRepository(Generic[BaseModel]):
             NotFoundException: Если запись с указанным id не найдена.
 
         Examples:
-            >>> # Пример 1: Деактивация пользователя
-            >>> result = await user_repo.toggle_deactivate(123)
-            >>> if result:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            ...
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     user_repo = UserRepository(db_session)
+            ...     # Пример 1: Деактивация пользователя
+            ...     result = await user_repo.toggle_deactivate(123)
+            ...     if result:
+            ...         user = await user_repo.get(123)
+            ...         print(f"Статус деактивации: {user.deactivated_at is not None}")
+            ...
+            ...     # Пример 2: Реактивация ранее деактивированного пользователя
+            ...     # (повторный вызов для того же пользователя)
+            ...     result = await user_repo.toggle_deactivate(123)
             ...     user = await user_repo.get(123)
-            ...     print(f"Статус деактивации: {user.deactivated_at is not None}")
-
-            >>> # Пример 2: Реактивация ранее деактивированного пользователя
-            >>> # (повторный вызов для того же пользователя)
-            >>> result = await user_repo.toggle_deactivate(123)
-            >>> user = await user_repo.get(123)
-            >>> print(f"Пользователь снова активен: {user.deactivated_at is None}")
+            ...     print(f"Пользователь снова активен: {user.deactivated_at is None}")
         """
         if not hasattr(self._MODEL, "deactivated_at"):
             raise DeactivatedNotAllowed(self._MODEL.__name__)
@@ -385,21 +489,32 @@ class BaseRepository(Generic[BaseModel]):
             list[BaseModelType]: Список моделей, соответствующих критериям.
 
         Examples:
-            >>> # Пример 1: Получение всех пользователей с пагинацией
-            >>> users = await user_repo.list(navigation={"limit": 10, "offset": 0})
-            >>> print(f"Получено {len(users)} пользователей")
-
-            >>> # Пример 2: Фильтрация по списку ID и сортировка
-            >>> users = await user_repo.list(
-            ...     filters={"ids": [1, 2, 3]},
-            ...     sorting={"field": "name", "direction": "asc"}
-            ... )
-            >>> for user in users:
-            ...     print(user.name)
-
-            >>> # Пример 3: Получение только удаленных записей
-            >>> deleted_users = await user_repo.list(filters={"only_deleted": True})
-            >>> print(f"Найдено {len(deleted_users)} удаленных пользователей")
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> class UserRepository(BaseRepository):
+            ...     _MODEL = User
+            ...
+            >>> async def main():
+            ...     db_session = await db_manager.get_db_session()
+            ...     user_repo = UserRepository(db_session)
+            ...     # Пример 1: Получение всех пользователей с пагинацией
+            ...     users = await user_repo.list(navigation={"limit": 10, "offset": 0})
+            ...     print(f"Получено {len(users)} пользователей")
+            ...
+            ...     # Пример 2: Фильтрация по списку ID и сортировка
+            ...     users = await user_repo.list(
+            ...         filters={"ids": [1, 2, 3]},
+            ...         sorting={"field": "name", "direction": "asc"}
+            ...     )
+            ...     for user in users:
+            ...         print(user.name)
+            ...
+            ...     # Пример 3: Получение только удаленных записей
+            ...     deleted_users = await user_repo.list(filters={"only_deleted": True})
+            ...     print(f"Найдено {len(deleted_users)} удаленных пользователей")
         """
         stmt: Select = select(self._MODEL)
 
@@ -472,16 +587,22 @@ class BaseRepository(Generic[BaseModel]):
             Не предназначен для прямого вызова извне.
 
         Examples:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     name: str
+            ...     age: int
+            >>>
             >>> # Пример 1: Создание новой модели
-            >>> payload = {"name": "John", "age": 30}
-            >>> model = self._get_filled_model(payload)
-            >>> print(model.name)  # John
-            >>> print(model.age)   # 30
+            >>> user_payload = {"name": "John", "age": 30}
+            >>> user_model: User = self._get_filled_model(payload)
+            >>> print(user_model.name)  # John
+            >>> print(user_model.age)   # 30
 
             >>> # Пример 2: Обновление существующей модели
             >>> existing_model = User(id=1, name="Old Name")
-            >>> payload = {"name": "New Name"}
-            >>> updated_model = self._get_filled_model(payload, existing_model)
+            >>> user_payload = {"name": "New Name"}
+            >>> updated_model: User = self._get_filled_model(user_payload, existing_model)
             >>> print(updated_model.name)  # New Name
         """
         if not model:
@@ -517,10 +638,11 @@ class BaseRepository(Generic[BaseModel]):
             Не предназначен для прямого вызова извне.
 
         Examples:
-            >>> # Пример: Внутреннее использование при получении по ID
-            >>> # (вызывается автоматически методом get)
-            >>> entity = await self._get_by_field_name_and_value(self._MODEL.id, 123)
-            >>> print(entity)  # Модель с id=123
+            >>> async def main():
+            ...     # Пример: Внутреннее использование при получении по ID
+            ...     # (вызывается автоматически методом get)
+            ...     entity = await self._get_by_field_name_and_value(self._MODEL.id, 123)
+            ...     print(entity) # Модель с id=123
         """
         stmt: Select = select(self._MODEL).where(field == value)
         result: Result[BaseModel] = await self._db_session.execute(stmt)
@@ -559,12 +681,16 @@ class BaseRepository(Generic[BaseModel]):
             - "with_deactivated": включая деактивированные записи (по умолчанию - только активные)
 
         Examples:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
             >>> # Пример: Внутреннее использование при вызове list
             >>> # (вызывается автоматически)
-            >>> stmt = select(User)
-            >>> filters = {"ids": [1, 2, 3], "only_deleted": True}
-            >>> stmt = self._apply_filters(stmt, filters)
-            >>> # Результатирующий запрос будет содержать условия:
+            >>> select_stmt: Select = select(User)
+            >>> user_filters = {"ids": [1, 2, 3], "only_deleted": True}
+            >>> filtered_select_stmt = self._apply_filters(select_stmt, user_filters)
+            >>> # Результирующий запрос будет содержать условия:
             >>> # WHERE id IN (1, 2, 3) AND deleted_at IS NOT NULL
         """
         self._apply_primary_ids_filters(stmt, filters)
@@ -593,11 +719,16 @@ class BaseRepository(Generic[BaseModel]):
             Не предназначен для прямого вызова извне.
 
         Examples:
-            >>> # Пример: Применение фильтров по ID и UUID
-            >>> stmt = select(User)
-            >>> filters = {"ids": [1, 2, 3], "uuids": [uuid1, uuid2]}
-            >>> stmt = self._apply_primary_ids_filters(stmt, filters)
-            >>> # Результатирующий запрос будет содержать условия:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>> # Пример: Внутреннее использование при вызове list
+            >>> # (вызывается автоматически)
+            >>> select_stmt: Select = select(User)
+            >>> user_filters = {"ids": [1, 2, 3], "uuids": [UUID("..."), UUID("...")]}
+            >>> filtered_select_stmt = self._apply_filters(select_stmt, user_filters)
+            >>> # Результирующий запрос будет содержать условия:
             >>> # WHERE id IN (1, 2, 3) AND uuid IN (uuid1, uuid2)
         """
         if filters.get("ids"):
@@ -632,26 +763,23 @@ class BaseRepository(Generic[BaseModel]):
             Не предназначен для прямого вызова извне.
 
         Examples:
+            >>> from dh_bl_core.database import BaseModel, db_manager
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
             >>> # Пример 1: Фильтрация только удаленных записей
-            >>> stmt = select(User)
-            >>> filters = {"only_deleted": True}
-            >>> stmt = self._apply_deleted_deactivated_filters(stmt, filters)
-            >>> # Результатирующий запрос будет содержать условие:
+            >>> select_stmt = select(User)
+            >>> user_filters = {"only_deleted": True}
+            >>> filtered_select_stmt = self._apply_deleted_deactivated_filters(select_stmt, user_filters)
+            >>> # Результирующий запрос будет содержать условие:
             >>> # WHERE deleted_at IS NOT NULL
 
             >>> # Пример 2: Фильтрация только активных записей (по умолчанию)
-            >>> stmt = select(User)
-            >>> filters = {}
-            >>> stmt = self._apply_deleted_deactivated_filters(stmt, filters)
-            >>> # Результатирующий запрос будет содержать условие:
+            >>> select_stmt = select(User)
+            >>> user_filters = {}
+            >>> filtered_select_stmt = self._apply_deleted_deactivated_filters(select_stmt, user_filters)
+            >>> # Результирующий запрос будет содержать условие:
             >>> # WHERE deleted_at IS NULL
-
-            >>> # Пример 3: Фильтрация только деактивированных записей
-            >>> stmt = select(User)
-            >>> filters = {"only_deactivated": True}
-            >>> stmt = self._apply_deleted_deactivated_filters(stmt, filters)
-            >>> # Результатирующий запрос будет содержать условие:
-            >>> # WHERE deactivated_at IS NOT NULL
         """
         if hasattr(self._MODEL, "deleted_at"):
             if not filters.get("only_deleted") and not filters.get("with_deleted"):

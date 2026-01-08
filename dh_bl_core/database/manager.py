@@ -25,27 +25,26 @@ class AsyncDatabaseConnectionManager:
         _session_maker (Optional[async_sessionmaker]): Фабрика сессий SQLAlchemy.
 
     Examples:
-        >>> # Пример 1: Инициализация менеджера и получение сессии
-        >>> from dh_bl_core.database import db_manager
-        >>> from settings import DatabaseSettings
+        >>> from dh_bl_core.database import db_manager, PGDatabaseConfig
+        >>>from sqlalchemy import text
         >>>
         >>> # Инициализация менеджера с настройками
-        >>> db_manager.init(DatabaseSettings())
+        >>> db_manager.init(PGDatabaseConfig())
         >>>
-        >>> # Получение сессии через генератор
-        >>> async for session in db_manager.get_session():
-        ...     result = await session.execute("SELECT * FROM users")
-        ...     users = result.fetchall()
-
-        >>> # Пример 2: Использование контекстного менеджера
-        >>> async with db_manager.get_db_context() as session:
-        ...     result = await session.execute("SELECT * FROM users")
-        ...     users = result.fetchall()
-        ...     await session.commit()
-
-        >>> # Пример 3: Проверка работоспособности подключения
-        >>> is_healthy = await db_manager.health_check()
-        >>> print(f"Состояние БД: {'работает' if is_healthy else 'недоступна'}")
+        >>> async def main():
+        ...     # Пример 1: Инициализация менеджера и получение сессии
+        ...     # Получение сессии через генератор
+        ...     async for session in db_manager.get_session():
+        ...         result = await session.execute(text("SELECT * FROM users"))
+        ...         users = result.fetchall()
+        ...     # Пример 2: Использование контекстного менеджера
+        ...     async with db_manager.get_db_context() as session:
+        ...         result = await session.execute(text("SELECT * FROM users"))
+        ...         users = result.fetchall()
+        ...         await session.commit()
+        ...     # Пример 3: Проверка работоспособности подключения
+        ...     is_healthy = await db_manager.health_check()
+        ...     print(f"Состояние БД: {'работает' if is_healthy else 'недоступна'}")
     """
 
     _instance: Optional["AsyncDatabaseConnectionManager"] = None
@@ -83,12 +82,15 @@ class AsyncDatabaseConnectionManager:
 
         Examples:
             >>> # Инициализация в асинхронном режиме
-            >>> db_manager.init(settings)
+            >>> from fastapi import FastAPI
+            >>> from dh_bl_core.database import db_manager, PGDatabaseConfig
+            >>> db_manager.init(PGDatabaseConfig())
             >>>
             >>> # Инициализация в приложении FastAPI
-            >>> from dh_bl_core.config import get_pg_database_config, get_app_config
+            >>> from dh_bl_core.database import get_pg_database_config
+            >>> from  dh_bl_core.config import get_app_config
             >>> @asynccontextmanager
-            >>> async def lifespan(app: FastAPI):
+            >>> async def lifespan(_: FastAPI):
             ...     # Старт приложения
             ...     print("🚀 Starting application...")
             ...
@@ -148,10 +150,11 @@ class AsyncDatabaseConnectionManager:
             >>> # Получение движка для прямого подключения
             >>> engine = db_manager.engine
             >>>
-            >>> # Использование движка для выполнения сырого SQL
-            >>> async with engine.connect() as conn:
-            ...     result = await conn.execute("SELECT 1")
-            ...     print(await result.scalar())
+            >>> async def main():
+            ...     # Использование движка для выполнения сырого SQL
+            ...     async with engine.connect() as conn:
+            ...         result = await conn.execute(text("SELECT 1"))
+            ...         print(await result.scalar())
         """
         if self._engine is None:
             raise DbMangerNotInit()
@@ -173,20 +176,20 @@ class AsyncDatabaseConnectionManager:
 
         Examples:
             >>> # Создание новой сессии
-            >>> SessionLocal = db_manager.session_maker
-            >>> session = SessionLocal()
-            >>> try:
-            ...     result = await session.execute("SELECT * FROM users")
-            ...     users = result.fetchall()
-            ... finally:
-            ...     await session.close()
+            >>> async def main():
+            ...     session = db_manager.session_maker()
+            ...     try:
+            ...         result = await session.execute(text("SELECT * FROM users"))
+            ...         users = result.fetchall()
+            ...     finally:
+            ...         await session.close()
         """
         if self._session_maker is None:
             raise DbMangerNotInit()
 
         return self._session_maker
 
-    async def get_session(self) -> AsyncGenerator[AsyncSession | Session]:
+    async def get_session(self) -> AsyncGenerator[AsyncSession | Session, None]:
         """
         Генератор сессий для использования в FastAPI зависимостях.
 
@@ -203,13 +206,14 @@ class AsyncDatabaseConnectionManager:
             >>> # Использование в FastAPI зависимости
             >>> from fastapi import Depends
             >>>
-            >>> async def get_db_session(session = Depends(db_manager.get_session)):
-            ...     return session
+            >>> async def get_db_session(session_db = Depends(db_manager.get_session)):
+            ...     return session_db
             >>>
-            >>> # Прямое использование в корутине
-            >>> async for session in db_manager.get_session():
-            ...     result = await session.execute("SELECT * FROM users")
-            ...     users = result.fetchall()
+            >>> async def main():
+            ...     # Прямое использование в корутине
+            ...     async for session_db in db_manager.get_session():
+            ...         result = await session_db.execute(text("SELECT * FROM users"))
+            ...         users = result.fetchall()
         """
         async with self.session_maker() as session:
             yield session
@@ -223,12 +227,13 @@ class AsyncDatabaseConnectionManager:
         между разными базами данных.
 
         Examples:
-            >>> # Закрытие соединения при остановке приложения
-            >>> await db_manager.close()
-            >>>
-            >>> # Переключение между разными базами данных
-            >>> await db_manager.close()  # Закрываем текущее соединение
-            >>> db_manager.init(new_settings, async_mode=True)  # Инициализируем с новыми настройками
+            >>> async def main():
+            ...     # Закрытие соединения при остановке приложения
+            ...     await db_manager.close()
+            ...
+                ...     # Переключение между разными базами данных
+            ...     await db_manager.close()  # Закрываем текущее соединение
+            ...     db_manager.init(new_settings, async_mode=True)  # Инициализируем с новыми настройками
         """
         if self._engine is None:
             return
@@ -246,13 +251,16 @@ class AsyncDatabaseConnectionManager:
 
         Examples:
             >>> # Проверка состояния базы данных
-            >>> is_healthy = await db_manager.health_check()
-            >>> if is_healthy:
-            ...     print("База данных работает нормально")
-            ... else:
-            ...     print("База данных недоступна")
+            >>> async def main():
+            ...     is_healthy = await db_manager.health_check()
+            ...     if is_healthy:
+            ...         print("База данных работает нормально")
+            ...     else:
+            ...         print("База данных недоступна")
 
             >>> # Использование в health-check эндпоинте API
+            >>> from fastapi import FastAPI
+            >>> app = FastAPI()
             >>> @app.get("/health")
             ... async def health_check():
             ...     return {"database": "healthy" if await db_manager.health_check() else "unhealthy"}
@@ -285,21 +293,30 @@ class AsyncDatabaseConnectionManager:
 
         Examples:
             >>> # Использование в сервисном слое
+            >>> from dh_bl_core.database import BaseModel
+            >>>
+            >>> class User(BaseModel):
+            ...     pass
+            >>>
+            >>> class Order(BaseModel):
+            ...     pass
+            >>>
             >>> async def create_user(user_data: dict):
-            ...     async with db_manager.get_db_context() as session:
-            ...         session.add(User(**user_data))
-            ...         await session.commit()
+            ...     async with db_manager.get_db_context() as db_session:
+            ...         db_session.add(User(**user_data))
+            ...         await db_session.commit()
             ...         return user_data
             >>>
             >>> # Работа с транзакциями
-            >>> async with db_manager.get_db_context() as session:
-            ...     try:
-            ...         session.add(User(name="John"))
-            ...         session.add(Order(user_id=1))
-            ...         await session.commit()  # Явная фиксация изменений
-            ...     except Exception as e:
-            ...         # При исключении автоматически выполнится rollback
-            ...         print(f"Ошибка при сохранении: {e}")
+            >>> async def main():
+            ...     async with db_manager.get_db_context() as db_session:
+            ...         try:
+            ...             db_session.add(User(name="John"))
+            ...             db_session.add(Order(user_id=1))
+            ...             await db_session.commit()  # Явная фиксация изменений
+            ...         except Exception as e:
+            ...             # При исключении автоматически выполнится rollback
+            ...             print(f"Ошибка при сохранении: {e}")
         """
         session = self.session_maker()
         try:

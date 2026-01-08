@@ -26,7 +26,7 @@ class PGDatabaseConfig(BaseSettings):
         echo (bool): Включает режим отладки SQL запросов. По умолчанию False.
 
     Examples:
-        >>> from dh_bl_core.config import PGDatabaseConfig
+        >>> from dh_bl_core.database import PGDatabaseConfig
         >>>
         >>> # Создание конфигурации из переменных окружения
         >>> config = PGDatabaseConfig()
@@ -186,7 +186,7 @@ def get_pg_database_config() -> PGDatabaseConfig:
         PGDatabaseConfig: Экземпляр конфигурации с настройками подключения к PostgreSQL.
 
     Examples:
-        >>> from dh_bl_core.config.pg_database import get_pg_database_config
+        >>> from dh_bl_core.database import get_pg_database_config
         >>>
         >>> # Получение экземпляра конфигурации
         >>> config = get_pg_database_config()

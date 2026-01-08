@@ -23,19 +23,20 @@ class EventDispatcher:
         >>> async def user_created_handler(data):
         ...     print(f"Создан пользователь: {data['username']}")
         ...
-        >>> event_dispatcher.on("user_created", user_created_handler)
-        >>> await event_dispatcher.emit("user_created", {"username": "john_doe"})
-        Создан пользователь: john_doe
-
         >>> # Пример 2: Использование одноразового обработчика
         >>> async def welcome_email_handler(data):
         ...     print(f"Отправка приветственного письма для: {data['email']}")
         ...
-        >>> event_dispatcher.on("user_created", welcome_email_handler, once=True)
-        >>> await event_dispatcher.emit("user_created", {"email": "user@example.com"})
-        Отправка приветственного письма для: user@example.com
-        >>> await event_dispatcher.emit("user_created", {"email": "another@example.com"})
-        >>> # Второй вызов не выполнит обработчик, так как он был одноразовым
+        >>> async def main():
+        ...     event_dispatcher.on("user_created", user_created_handler)
+        ...     await event_dispatcher.emit("user_created", {"username": "john_doe"})
+        ...     #Создан пользователь: john_doe
+        ...
+        ...     event_dispatcher.on("user_created", welcome_email_handler, once=True)
+        ...     await event_dispatcher.emit("user_created", {"email": "user@example.com"})
+        ...     # Отправка приветственного письма для: user@example.com
+        ...     await event_dispatcher.emit("user_created", {"email": "another@example.com"})
+        ...     # Второй вызов не выполнит обработчик, так как он был одноразовым
     """
 
     _instance = None
@@ -94,18 +95,19 @@ class EventDispatcher:
             list[Any]: Список результатов выполнения всех обработчиков события.
 
         Examples:
-            >>> # Пример 1: Генерация события с данными
-            >>> results = await event_dispatcher.emit("user_login", {"user_id": 123, "ip": "192.168.1.1"})
-            >>> print(f"Выполнено {len(results)} обработчиков")
-
-            >>> # Пример 2: Генерация события без данных
-            >>> results = await event_dispatcher.emit("system_start")
-            >>> print("Система запущена")
-
-            >>> # Пример 3: Обработка результатов обработчиков
-            >>> results = await event_dispatcher.emit("data_processed", {"count": 100})
-            >>> successful = sum(1 for result in results if result is True)
-            >>> print(f"Успешно обработано: {successful} из {len(results)}")
+            >>> async def main():
+            ...     # Пример 1: Генерация события с данными
+            ...     results = await event_dispatcher.emit("user_login", {"user_id": 123, "ip": "192.168.1.1"})
+            ...     print(f"Выполнено {len(results)} обработчиков")
+            ...
+            ...     # Пример 2: Генерация события без данных
+            ...     results = await event_dispatcher.emit("system_start")
+            ...     print("Система запущена")
+            ...
+            ...     # Пример 3: Обработка результатов обработчиков
+            ...     results = await event_dispatcher.emit("data_processed", {"count": 100})
+            ...     successful = sum(1 for result in results if result is True)
+            ...     print(f"Успешно обработано: {successful} из {len(results)}")
         """
         events_results: list[Any] = []
 
@@ -152,9 +154,9 @@ class EventDispatcher:
             >>> event_dispatcher.on("user_registered", send_welcome_email, once=True)
 
             >>> # Пример 3: Подписка на несколько событий с разными обработчиками
-            >>> event_dispatcher.on("order_created", handle_order_creation)
-            >>> event_dispatcher.on("order_created", send_order_notification)
-            >>> event_dispatcher.on("order_cancelled", handle_order_cancellation)
+            >>> event_dispatcher.on("order_created", lambda data: print(data))
+            >>> event_dispatcher.on("order_created", lambda data: print(data))
+            >>> event_dispatcher.on("order_cancelled", lambda data: print(data))
         """
         if event_name not in self._listeners:
             self._listeners[event_name] = []

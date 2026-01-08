@@ -21,23 +21,25 @@ class DbSettingProtocol(Protocol):
         >>> class PostgresSettings:
         ...     echo: bool = True
         ...
-        ...     def get_sync_connection_url(self) -> str:
+        ...     @staticmethod
+        ...     def get_sync_connection_url() -> str:
         ...         return "postgresql://user:password@localhost:5432/dbname"
         ...
-        ...     def get_async_connection_url(self) -> str:
+        ...     @staticmethod
+        ...     def get_async_connection_url() -> str:
         ...         return "postgresql+asyncpg://user:password@localhost:5432/dbname"
 
         >>> # Пример 2: Использование протокола для аннотации типов
-        >>> def create_database_engine(settings: DbSettingProtocol):
+        >>> def create_database_engine(db_settings: PostgresSettings):
         ...     '''Создает движок базы данных на основе настроек'''
-        ...     if settings.echo:
-        ...         print(f"SQL логирование включено: {settings.get_sync_connection_url()}")
-        ...     return settings.get_async_connection_url()
-
+        ...     if db_settings.echo:
+        ...         print(f"SQL логирование включено: {db_settings.get_sync_connection_url()}")
+        ...     return db_settings.get_async_connection_url()
+        >>>
+        >>> from dh_bl_core.database.types import DbSettingProtocol
+        >>>
         >>> # Пример 3: Проверка соответствия класса протоколу
         >>> settings = PostgresSettings()
-        >>> isinstance(settings, DbSettingProtocol)
-        True
         >>> create_database_engine(settings)
         'postgresql+asyncpg://user:password@localhost:5432/dbname'
     """
@@ -55,6 +57,17 @@ class DbSettingProtocol(Protocol):
             str: Синхронный URL подключения к базе данных
 
         Examples:
+            >>> class PostgresSettings:
+            ...     echo: bool = True
+            ...
+            ...     @staticmethod
+            ...     def get_sync_connection_url() -> str:
+            ...         return "postgresql://user:password@localhost:5432/dbname"
+            ...
+            ...     @staticmethod
+            ...     def get_async_connection_url() -> str:
+            ...         return "postgresql+asyncpg://user:password@localhost:5432/dbname"
+            ...
             >>> settings = PostgresSettings()
             >>> url = settings.get_sync_connection_url()
             >>> print(url)
@@ -77,6 +90,17 @@ class DbSettingProtocol(Protocol):
             str: Асинхронный URL подключения к базе данных
 
         Examples:
+            >>> class PostgresSettings:
+            ...     echo: bool = True
+            ...
+            ...     @staticmethod
+            ...     def get_sync_connection_url() -> str:
+            ...         return "postgresql://user:password@localhost:5432/dbname"
+            ...
+            ...     @staticmethod
+            ...     def get_async_connection_url() -> str:
+            ...         return "postgresql+asyncpg://user:password@localhost:5432/dbname"
+            ...
             >>> settings = PostgresSettings()
             >>> url = settings.get_async_connection_url()
             >>> print(url)
