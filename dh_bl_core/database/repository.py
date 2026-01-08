@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import Any, Generic, Type
 from uuid import UUID, uuid4
 
+from loguru import Logger
 from sqlalchemy import Delete, Result, Select, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped
@@ -12,6 +13,7 @@ from dh_bl_core.exceptions import NotFoundException
 
 from .exceptions import DeactivatedNotAllowed, EmptyDbSession, NoModelInRepository, NoPrimaryKeyInModel, NoUuidInModel
 from .types import BaseModel
+from ..logging import LogManager
 
 
 class BaseRepository(Generic[BaseModel]):
@@ -54,6 +56,7 @@ class BaseRepository(Generic[BaseModel]):
 
     _MODEL: Type[BaseModel]
     _LIMIT: int = 100
+    _LOGGER: Logger = LogManager("repos").logger
 
     def __init__(self, db_session: AsyncSession) -> None:
         """
@@ -86,6 +89,7 @@ class BaseRepository(Generic[BaseModel]):
             ... except EmptyDbSession as e:
             ...     print(f"Ошибка инициализации: {e}")
         """
+
         if not db_session:
             raise EmptyDbSession(self.__class__.__name__)
 
@@ -93,6 +97,7 @@ class BaseRepository(Generic[BaseModel]):
             raise NoModelInRepository(self.__class__.__name__)
 
         self._db_session: AsyncSession = db_session
+        self._LOGGER.debug(f"Репозиторий {self.__class__.__name__} инициализирован")
 
     async def create(self, payload: dict) -> BaseModel:
         """
@@ -140,12 +145,14 @@ class BaseRepository(Generic[BaseModel]):
             ...     print(f"UUID продукта: {product.uuid}")
             ...     print(f"Дата создания: {product.created_at}")
         """
+        self._LOGGER.debug(f"Создание новой записи в репозитории {self.__class__.__name__}")
         self._before_create(payload)
         entity: BaseModel = self._get_filled_model(payload)
 
         self._db_session.add(entity)
         await self._db_session.commit()
         await self._db_session.refresh(entity)
+        self._LOGGER.info(f"Создана новая запись в репозитории {self.__class__.__name__} - {entity.id}")
 
         return entity
 
@@ -190,6 +197,7 @@ class BaseRepository(Generic[BaseModel]):
             ...     except NotFoundException:
             ...         return False
         """
+        self._LOGGER.info(f"Получение записи с id {entity_id} из репозитория {self.__class__.__name__}")
         return await self._get_by_field_name_and_value(self._MODEL.id, entity_id)
 
     async def get_by_uuid(self, uuid: UUID) -> BaseModel:
@@ -235,6 +243,7 @@ class BaseRepository(Generic[BaseModel]):
             ...     except NotFoundException:
             ...         print("Пользователь с таким UUID не найден")
         """
+        self._LOGGER.info(f"Получение записи с uuid {uuid} из репозитория {self.__class__.__name__}")
         if not hasattr(self._MODEL, "uuid"):
             raise NoUuidInModel(self._MODEL.__name__)
 
@@ -286,6 +295,7 @@ class BaseRepository(Generic[BaseModel]):
             ...     }
             ...     updated_entity = await user_repo.update(update_data)
         """
+        self._LOGGER.info(f"Обновление записи в репозитории {self.__class__.__name__}")
         if not payload.get("id") and not payload.get("uuid"):
             raise NoPrimaryKeyInModel(self._MODEL.__name__)
 
@@ -302,6 +312,8 @@ class BaseRepository(Generic[BaseModel]):
         self._db_session.add(entity)
         await self._db_session.commit()
         await self._db_session.refresh(entity)
+
+        self._LOGGER.info(f"Обновлена запись в репозитории {self.__class__.__name__} - {entity.id}")
 
         return entity
 
@@ -351,17 +363,21 @@ class BaseRepository(Generic[BaseModel]):
             ...     if result:
             ...         print("Запись журнала физически удалена из БД")
         """
+        self._LOGGER.info(f"Удаление записи с id {entity_id} из репозитория {self.__class__.__name__}")
         entity: BaseModel = await self.get(entity_id)
 
         if hasattr(entity, "deleted_at") and not entity.deleted_at:
+            self._LOGGER.debug(f"Использование мягкого удаления для модели {self._MODEL.__name__}")
             entity.deleted_at = datetime.now(UTC)
             self._db_session.add(entity)
             await self._db_session.commit()
+            self._LOGGER.info(f"Мягкое удаление записи с id {entity_id} из репозитория {self.__class__.__name__}")
             return True
 
         stmt: Delete = delete(self._MODEL).where(self._MODEL.id == entity_id)
         await self._db_session.execute(stmt)
         await self._db_session.commit()
+        self._LOGGER.info(f"Физическое удаление записи с id {entity_id} из репозитория {self.__class__.__name__}")
 
         return True
 
@@ -400,6 +416,7 @@ class BaseRepository(Generic[BaseModel]):
             ...     if result:
             ...         print("Пользователь успешно удален")
         """
+        self._LOGGER.info(f"Удаление записи с uuid {uuid} из репозитория {self.__class__.__name__}")
         entity: BaseModel = await self.get_by_uuid(uuid)
         return await self.delete(entity.id)
 
@@ -446,18 +463,24 @@ class BaseRepository(Generic[BaseModel]):
             ...     user = await user_repo.get(123)
             ...     print(f"Пользователь снова активен: {user.deactivated_at is None}")
         """
+        self._LOGGER.info(f"Переключение деактивации для записи с id {entity_id} в репозитории {self.__class__.__name__}")
         if not hasattr(self._MODEL, "deactivated_at"):
             raise DeactivatedNotAllowed(self._MODEL.__name__)
 
         entity: BaseModel = await self.get(entity_id)
 
         if entity.deactivated_at:
+            self._LOGGER.debug(f"Очистка поля deactivated_at")
             entity.deactivated_at = None
         else:
+            self._LOGGER.debug(f"Установка поля deactivated_at")
             entity.deactivated_at = datetime.now(UTC)
 
         self._db_session.add(entity)
         await self._db_session.commit()
+        self._LOGGER.info(
+            f"Переключение деактивации для записи с id {entity_id} в репозитории {self.__class__.__name__}"
+        )
         return True
 
     async def list(
@@ -516,6 +539,7 @@ class BaseRepository(Generic[BaseModel]):
             ...     deleted_users = await user_repo.list(filters={"only_deleted": True})
             ...     print(f"Найдено {len(deleted_users)} удаленных пользователей")
         """
+        self._LOGGER.info(f"Получение списка записей из репозитория {self.__class__.__name__}")
         stmt: Select = select(self._MODEL)
 
         if filters:
@@ -531,6 +555,8 @@ class BaseRepository(Generic[BaseModel]):
         stmt = stmt.limit(navigation.get("limit")).offset(navigation.get("offset"))
 
         result: Result[BaseModel] = await self._db_session.execute(stmt)
+
+        self._LOGGER.info(f"Получено {result.rowcount} записей из репозитория {self.__class__.__name__}")
 
         return list(result.scalars().all())
 
@@ -560,12 +586,15 @@ class BaseRepository(Generic[BaseModel]):
             >>> # - "updated_at": текущая временная метка
         """
         if hasattr(self._MODEL, "uuid") and not payload.get("uuid"):
+            self._LOGGER.debug(f"Генерация UUID для модели {self._MODEL.__name__}")
             payload["uuid"] = uuid4()
 
         if hasattr(self._MODEL, "created_at") and not payload.get("created_at"):
+            self._LOGGER.debug(f"Установка created_at для модели {self._MODEL.__name__}")
             payload["created_at"] = datetime.now(UTC)
 
         if hasattr(self._MODEL, "updated_at") and not payload.get("updated_at"):
+            self._LOGGER.debug(f"Установка updated_at для модели {self._MODEL.__name__}")
             payload["updated_at"] = datetime.now(UTC)
 
     def _get_filled_model(self, payload: dict, model: BaseModel | None = None) -> BaseModel:
@@ -610,8 +639,10 @@ class BaseRepository(Generic[BaseModel]):
 
         for key, value in payload.items():
             if not hasattr(model, key):
+                self._LOGGER.debug(f"Поле {key} не найдено в модели {self._MODEL.__name__}")
                 continue
 
+            self._LOGGER.debug(f"Заполнение поля {key} модели {self._MODEL.__name__} значением {value}")
             setattr(model, key, value)
 
         return model
@@ -731,10 +762,13 @@ class BaseRepository(Generic[BaseModel]):
             >>> # Результирующий запрос будет содержать условия:
             >>> # WHERE id IN (1, 2, 3) AND uuid IN (uuid1, uuid2)
         """
+        self._LOGGER.debug(f"Применение фильтров к запросу: {filters}")
         if filters.get("ids"):
+            self._LOGGER.debug(f"Фильтрация по списку ID: {filters['ids']}")
             stmt = stmt.where(self._MODEL.id.in_(filters["ids"]))
 
         if filters.get("uuids") and hasattr(self._MODEL, "uuid"):
+            self._LOGGER.debug(f"Фильтрация по списку UUID: {filters['uuids']}")
             stmt = stmt.where(self._MODEL.uuid.in_(filters["uuids"]))
 
         return stmt
@@ -781,17 +815,24 @@ class BaseRepository(Generic[BaseModel]):
             >>> # Результирующий запрос будет содержать условие:
             >>> # WHERE deleted_at IS NULL
         """
+        self._LOGGER.debug(f"Применение фильтров по статусу удаления и деактивации: {filters}")
         if hasattr(self._MODEL, "deleted_at"):
+            self._LOGGER.debug("Модель содержит поле deleted_at")
             if not filters.get("only_deleted") and not filters.get("with_deleted"):
+                self._LOGGER.debug("Фильтрация только активных записей")
                 stmt = stmt.where(self._MODEL.deleted_at.is_(None))
 
             if filters.get("only_deleted"):
+                self._LOGGER.debug("Фильтрация только удаленных записей")
                 stmt = stmt.where(self._MODEL.deleted_at.isnot(None))
 
         if hasattr(self._MODEL, "deactivated_at"):
+            self._LOGGER.debug("Модель содержит поле deactivated_at")
             if filters.get("only_deactivated"):
+                self._LOGGER.debug("Фильтрация только деактивированных записей")
                 stmt = stmt.where(self._MODEL.deactivated_at.isnot(None))
             elif not filters.get("with_deactivated") and not filters.get("only_deactivated"):
+                self._LOGGER.debug("Фильтрация только активных записей")
                 stmt = stmt.where(self._MODEL.deactivated_at.is_(None))
 
         return stmt

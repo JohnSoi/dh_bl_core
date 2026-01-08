@@ -1,8 +1,9 @@
 """Диспетчер событий"""
-
+from logging import Logger
 from typing import Any
 
 from .types import EventHandler, EventHandlerType, ListenerType
+from ..logging import LogManager
 
 
 class EventDispatcher:
@@ -39,7 +40,8 @@ class EventDispatcher:
         ...     # Второй вызов не выполнит обработчик, так как он был одноразовым
     """
 
-    _instance = None
+    _INSTANCE = None
+    _LOGGER: Logger = LogManager("event").logger
 
     def __new__(cls):
         """
@@ -61,12 +63,14 @@ class EventDispatcher:
             и обеспечивает паттерн Синглтон. Должен вызываться интерпретатором Python
             автоматически при создании экземпляра класса.
         """
-        if cls._instance:
-            return cls._instance
+        if cls._INSTANCE:
+            cls._LOGGER.debug("EventDispatcher уже создан")
+            return cls._INSTANCE
 
-        cls._instance = super(EventDispatcher, cls).__new__(cls)
-        cls._instance._listeners = {}
-        return cls._instance
+        cls._INSTANCE = super(EventDispatcher, cls).__new__(cls)
+        cls._INSTANCE._listeners = {}
+        cls._LOGGER.debug("EventDispatcher создан")
+        return cls._INSTANCE
 
     def __init__(self):
         """
@@ -109,6 +113,7 @@ class EventDispatcher:
             ...     successful = sum(1 for result in results if result is True)
             ...     print(f"Успешно обработано: {successful} из {len(results)}")
         """
+        self._LOGGER.info(f"Генерация события: {event_name}")
         events_results: list[Any] = []
 
         if event_name not in self._listeners:
@@ -118,11 +123,19 @@ class EventDispatcher:
             handler: EventHandlerType = listener.handler
             is_once: bool = listener.once
 
+            self._LOGGER.debug(f"Обработчик события: {handler.__name__}, Одноразовый: {is_once}")
+
             result: Any = await handler(data)
+
+            self._LOGGER.debug(f"Результат обработчика: {result}")
+
             events_results.append(result)
 
             if is_once:
+                self._LOGGER.debug(f"Удаление одноразового обработчика: {handler.__name__}")
                 self._listeners[event_name].remove(listener)
+
+        self._LOGGER.info(f"Выполнено обработчиков: {len(events_results)}")
 
         return events_results
 
@@ -158,10 +171,13 @@ class EventDispatcher:
             >>> event_dispatcher.on("order_created", lambda data: print(data))
             >>> event_dispatcher.on("order_cancelled", lambda data: print(data))
         """
+        self._LOGGER.info(f"Регистрация обработчика для события: {event_name}")
         if event_name not in self._listeners:
+            self._LOGGER.debug(f"Создание списка обработчиков для события: {event_name}")
             self._listeners[event_name] = []
 
         self._listeners[event_name].append(EventHandler(handler, once))
+        self._LOGGER.info(f"Обработчик зарегистрирован для события: {event_name}")
 
 
 event_dispatcher: EventDispatcher = EventDispatcher()

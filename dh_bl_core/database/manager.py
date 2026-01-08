@@ -3,12 +3,14 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
+from loguru import Logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from .exceptions import DbMangerNotInit
 from .types import DbSettingProtocol
+from ..logging import LogManager
 
 
 class AsyncDatabaseConnectionManager:
@@ -47,9 +49,10 @@ class AsyncDatabaseConnectionManager:
         ...     print(f"Состояние БД: {'работает' if is_healthy else 'недоступна'}")
     """
 
-    _instance: Optional["AsyncDatabaseConnectionManager"] = None
-    _engine: AsyncEngine | None = None
-    _session_maker: async_sessionmaker | None = None
+    _INSTANCE: Optional["AsyncDatabaseConnectionManager"] = None
+    _ENGINE: AsyncEngine | None = None
+    _SESSION_MAKER: async_sessionmaker | None = None
+    _LOGGER: Logger = LogManager("db").logger
 
     def __new__(cls):
         """
@@ -60,10 +63,10 @@ class AsyncDatabaseConnectionManager:
         Returns:
             AsyncDatabaseConnectionManager: Единственный экземпляр класса
         """
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
+        if not cls._INSTANCE:
+            cls._INSTANCE = super().__new__(cls)
 
-        return cls._instance
+        return cls._INSTANCE
 
     def init(self, db_settings: DbSettingProtocol) -> None:
         """
@@ -120,20 +123,23 @@ class AsyncDatabaseConnectionManager:
             ...     lifespan=lifespan
             >>> )
         """
+        self._LOGGER.debug("Инициализация менеджера подключения к БД")
         # Мы уже инициализировали соединение - выходим
-        if self._engine is not None:
+        if self._ENGINE is not None:
+            self._LOGGER.warning("Повторная инициализация менеджера подключения к БД")
             return
 
         database_url: str = db_settings.get_async_connection_url()
 
-        self._engine = create_async_engine(url=database_url, echo=db_settings.echo)
-        self._session_maker = async_sessionmaker(
-            bind=self._engine,
+        self._ENGINE = create_async_engine(url=database_url, echo=db_settings.echo)
+        self._SESSION_MAKER = async_sessionmaker(
+            bind=self._ENGINE,
             class_=AsyncSession,
             expire_on_commit=False,
             autocommit=False,
             autoflush=False,
         )
+        self._LOGGER.info("Менеджер подключения к БД инициализирован")
 
     @property
     def engine(self) -> AsyncEngine:
@@ -156,10 +162,11 @@ class AsyncDatabaseConnectionManager:
             ...         result = await conn.execute(text("SELECT 1"))
             ...         print(await result.scalar())
         """
-        if self._engine is None:
+        if self._ENGINE is None:
+            self._LOGGER.error("Движок подключения к БД не инициализирован")
             raise DbMangerNotInit()
 
-        return self._engine
+        return self._ENGINE
 
     @property
     def session_maker(self) -> async_sessionmaker | sessionmaker:
@@ -184,10 +191,11 @@ class AsyncDatabaseConnectionManager:
             ...     finally:
             ...         await session.close()
         """
-        if self._session_maker is None:
+        if self._SESSION_MAKER is None:
+            self._LOGGER.error("Фабрика сессий не инициализирована")
             raise DbMangerNotInit()
 
-        return self._session_maker
+        return self._SESSION_MAKER
 
     async def get_session(self) -> AsyncGenerator[AsyncSession | Session, None]:
         """
@@ -215,7 +223,10 @@ class AsyncDatabaseConnectionManager:
             ...         result = await session_db.execute(text("SELECT * FROM users"))
             ...         users = result.fetchall()
         """
+        self._LOGGER.debug("Получение сессии для работы с БД")
+
         async with self.session_maker() as session:
+            self._LOGGER.info(f"Сессия получена: {session.info}")
             yield session
 
     async def close(self) -> None:
@@ -235,10 +246,12 @@ class AsyncDatabaseConnectionManager:
             ...     await db_manager.close()  # Закрываем текущее соединение
             ...     db_manager.init(new_settings, async_mode=True)  # Инициализируем с новыми настройками
         """
-        if self._engine is None:
+        if self._ENGINE is None:
+            self._LOGGER.warning("Попытка закрыть неинициализированный менеджер подключения к БД")
             return
 
-        await self._engine.dispose()
+        await self._ENGINE.dispose()
+        self._LOGGER.info("Соединение с БД закрыто")
 
     async def health_check(self) -> bool:
         """
@@ -265,12 +278,15 @@ class AsyncDatabaseConnectionManager:
             ... async def health_check():
             ...     return {"database": "healthy" if await db_manager.health_check() else "unhealthy"}
         """
+        self._LOGGER.info("Выполняется проверка соединения с БД")
         try:
             async with self.engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
 
+            self._LOGGER.info("Соединение с БД успешно проверено")
             return True
         except Exception:
+            self._LOGGER.error("Ошибка при проверке соединения с БД", exc_info=True)
             return False
 
     @asynccontextmanager
@@ -318,11 +334,14 @@ class AsyncDatabaseConnectionManager:
             ...             # При исключении автоматически выполнится rollback
             ...             print(f"Ошибка при сохранении: {e}")
         """
+        self._LOGGER.info("Получение контекстной сессии для работы с БД")
         session = self.session_maker()
         try:
             yield session
+            self._LOGGER.debug("Контекстная сессия успешно завершена")
         except Exception:
             await session.rollback()
+            self._LOGGER.error("Ошибка при работе с БД", exc_info=True)
             raise
         finally:
             await session.close()
