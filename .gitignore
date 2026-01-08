@@ -9,3 +9,5 @@ wheels/
 .idea
 
 uv.lock
+
+logs

@@ -1,4 +1,5 @@
 """Менеджер логирования."""
+
 from sys import stdout
 
 from loguru import logger
