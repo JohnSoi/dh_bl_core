@@ -114,4 +114,4 @@ class DbSettingProtocol(Protocol):
 
 
 # Типизация для всех наследников базовой модели
-BaseModel: TypeVar = TypeVar("BaseModel", bound=BaseModelClass)
+BaseModel = TypeVar("BaseModel", bound=BaseModelClass)

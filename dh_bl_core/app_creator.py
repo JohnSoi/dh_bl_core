@@ -1,6 +1,6 @@
 """Модуль для создания FastAPI приложения."""
 
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, FastAPI
 from x_request_id_middleware.fastapi_middleware import FastAPIXRequestIDMiddleware
 
 from dh_bl_core.api.middlewares import LogRequestResponseMiddleware
@@ -150,6 +150,38 @@ class AppCreator:
         self._middlewares.append(middleware)
 
     def add_route(self, route: APIRouter) -> None:
+        """
+        Добавляет роутер в список роутов приложения.
+
+        Метод позволяет зарегистрировать роутер (маршрутизатор) для FastAPI приложения.
+        Перед добавлением выполняется проверка на дублирование и валидность типа.
+        Повторное добавление одного и того же роутера игнорируется.
+
+        Args:
+            route (APIRouter): Экземпляр роутера, который должен быть добавлен.
+                Должен быть экземпляром класса APIRouter.
+
+        Raises:
+            InternalServerErrorException: Если переданный объект не является экземпляром APIRouter.
+
+        Examples:
+            >>> from dh_bl_core.app_creator import AppCreator
+            >>> from fastapi import APIRouter
+            >>>
+            >>> creator = AppCreator()
+            >>> router = APIRouter(prefix="/test")
+            >>> # Добавление роутера
+            >>> creator.add_route(router)
+            >>> # Повторное добавление того же роутера (игнорируется)
+            >>> creator.add_route(router)
+            >>> len(creator._routes)
+            1
+            >>> # Добавление невалидного объекта вызывает исключение
+            >>> creator.add_route("invalid_router")  # doctest: +IGNORE_EXCEPTION_DETAIL
+            Traceback (most recent call last):
+            ...
+            dh_bl_core.exceptions.InternalServerErrorException: Неверный тип добавляемого роута в приложение
+        """
         if route in self._routes:
             return
 

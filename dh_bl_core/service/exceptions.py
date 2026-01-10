@@ -25,4 +25,5 @@ class EmptyRepositoryNotAllowedException(InternalServerErrorException):
 
 
     """
+
     _DETAILS = "Репозиторий не может быть пустым."
