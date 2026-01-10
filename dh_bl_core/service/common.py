@@ -1,15 +1,17 @@
-# pylint: disable=too-few-public-methods
 """Базовый сервис."""
 
 from typing import Generic, Type
 
+from pydantic import BaseModel as BaseSchema
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from dh_bl_core.database.types import BaseModel
 
 from .exceptions import EmptyRepositoryNotAllowedException
 from .types import BaseRepository
 
 
-class BaseService(Generic[BaseRepository]):
+class BaseService(Generic[BaseRepository, BaseModel]):
     """
     Базовый сервис для всех сервисов приложения.
 
@@ -25,11 +27,10 @@ class BaseService(Generic[BaseRepository]):
 
     Examples:
         >>> from sqlalchemy.ext.asyncio import AsyncSession
-        >>> from dh_bl_core.service.types import BaseRepository
+        >>> from dh_bl_core.database import BaseRepository
         >>>
         >>> class MyRepository(BaseRepository):
-        ...     def __init__(self, db_session: AsyncSession) -> None:
-        ...         self._db_session = db_session
+        ...     ...
         ...
         >>> class MyService(BaseService[MyRepository]):
         ...     _REPOSITORY = MyRepository
@@ -63,10 +64,19 @@ class BaseService(Generic[BaseRepository]):
         Examples:
             >>> from sqlalchemy.ext.asyncio import AsyncSession
             >>>
+            >>> from dh_bl_core.service import BaseService
+            >>> from dh_bl_core.database import BaseRepository
+            >>>
+            >>> class MyRepository(BaseRepository):
+            ...     ...
+            >>>
+            >>> class MyService(BaseService):
+            ...     ...
+            ...
             >>> # Инициализация сервиса с сессией
-            >>> db_session = AsyncSession()
-            >>> service = MyService(db_session)
-            >>> service._db_session is db_session
+            >>> db_session_instance = AsyncSession()
+            >>> service = MyService(db_session_instance)
+            >>> service._db_session is db_session_instance
             True
             >>>
             >>> # Попытка инициализации с некорректным репозиторием
@@ -83,3 +93,192 @@ class BaseService(Generic[BaseRepository]):
 
         if not self._repository:
             raise EmptyRepositoryNotAllowedException()
+
+    async def create(self, payload: BaseSchema) -> BaseModel:
+        """
+        Создаёт новую сущность в базе данных.
+
+        Метод принимает объект схемы Pydantic, преобразует его в словарь
+        (исключая неустановленные поля) и передаёт репозиторию для создания записи.
+
+        Args:
+            payload (BaseSchema): Объект схемы Pydantic с данными для создания сущности.
+
+        Returns:
+            BaseModel: Созданная сущность в виде модели базы данных.
+
+        Examples:
+            >>> from dh_bl_core.database import BaseModel
+            >>>
+            >>> class UserCreateSchema(BaseSchema):
+            ...     name: str
+            ...     email: str
+            ...
+            >>> class UserModel(BaseModel):
+            ...     id: int
+            ...     name: str
+            ...     email: str
+            ...
+            >>> # Мок для репозитория
+            >>> class MockRepository:
+            ...     async def create(self, data: dict):
+            ...         return UserModel(id=1, **data)
+            ...
+            >>> class MyService(BaseService):
+            ...     ...
+            ...
+            >>> # Инициализация сервиса с сессией
+            >>> db_session_instance = AsyncSession()
+            >>> # Создание сервиса с моком репозитория
+            >>> service = MyService(db_session_instance)
+            >>> service._repository = MockRepository()
+            >>>
+            >>> async def main():
+            ...     # Создание новой сущности
+            ...     user_payload = UserCreateSchema(name="John", email="john@example.com")
+            ...     result: UserModel = await service.create(user_payload)
+            ...     # True
+            ...     isinstance(result, UserModel)
+            ...     print(result.name)
+            'John'
+        """
+        return await self._repository.create(payload.model_dump(exclude_unset=True))
+
+    async def update(self, payload: BaseSchema) -> BaseModel:
+        """
+        Обновляет существующую сущность в базе данных.
+
+        Метод принимает объект схемы Pydantic, преобразует его в словарь
+        (исключая неустановленные поля) и передаёт репозиторию для обновления записи.
+
+        Args:
+            payload (BaseSchema): Объект схемы Pydantic с данными для обновления сущности.
+                Должен включать идентификатор обновляемой сущности.
+
+        Returns:
+            BaseModel: Обновлённая сущность в виде модели базы данных.
+
+        Examples:
+            >>> from dh_bl_core.database import BaseModel
+            >>>
+            >>> class UserUpdateSchema(BaseSchema):
+            ...     id: int
+            ...     name: str
+            ...
+            >>> class UserModel(BaseModel):
+            ...     id: int
+            ...     name: str
+            ...     email: str
+            ...
+            >>> # Мок для репозитория
+            >>> class MockRepository:
+            ...     async def update(self, data: dict):
+            ...         return UserModel(id=data["id"], name=data["name"], email="old@example.com")
+            ...
+            >>> # Создание сервиса с моком репозитория
+            >>> class MyService(BaseService):
+            ...     ...
+            ...
+            >>> # Инициализация сервиса с сессией
+            >>> db_session_instance = AsyncSession()
+            >>> service = MyService(db_session_instance)
+            >>> service._repository = MockRepository()
+            >>>
+            >>> async def main():
+            ...     # Обновление сущности
+            ...     user_payload = UserUpdateSchema(id=1, name="John Doe")
+            ...     result: UserModel = await service.update(payload)
+            ...     # True
+            ...     isinstance(result, UserModel)
+            ...     print(result.name)
+            'John Doe'
+        """
+        return await self._repository.update(payload.model_dump(exclude_unset=True))
+
+    async def delete(self, entity_id: int) -> bool:
+        """
+        Удаляет сущность из базы данных.
+
+        Метод принимает объект схемы Pydantic, преобразует его в словарь
+        (исключая неустановленные поля) и передаёт репозиторию для удаления записи.
+
+        Args:
+            entity_id (int): Идентификатор удаляемой сущности.
+
+        Returns:
+            bool: True, если сущность была успешно удалена, иначе False.
+
+        Examples:
+            >>> # Мок для репозитория
+            >>> class MockRepository:
+            ...     async def delete(self, data: dict) -> bool:
+            ...         return True
+            ...
+            >>> # Создание сервиса с моком репозитория
+            >>> class MyService(BaseService):
+            ...     ...
+            ...
+            >>> # Инициализация сервиса с сессией
+            >>> db_session_instance = AsyncSession()
+            >>> service = MyService(db_session_instance)
+            >>> service._repository = MockRepository()
+            >>>
+            >>> async def main():
+            ...     # Удаление сущности
+            ...     result = await service.delete(1)
+            ...     print(result)
+            True
+        """
+        return await self._repository.delete(entity_id)
+
+    async def get(self, entity_id: int) -> BaseModel:
+        """
+        Получает сущность по её идентификатору.
+
+        Метод передаёт идентификатор репозиторию для получения соответствующей записи
+        из базы данных.
+
+        Args:
+            entity_id (int): Идентификатор сущности, которую нужно получить.
+
+        Returns:
+            BaseModel: Найденная сущность в виде модели базы данных.
+
+        Examples:
+            >>> from dh_bl_core.database import BaseModel
+            >>>
+            >>> class UserModel(BaseModel):
+            ...     id: int
+            ...     name: str
+            ...     email: str
+            ...
+            >>> # Мок для репозитория
+            >>> class MockRepository:
+            ...     async def get(self, entity_id: int):
+            ...         if entity_id == 1:
+            ...             return UserModel(id=1, name="John", email="john@example.com")
+            ...         return None
+            ...
+            >>> # Создание сервиса с моком репозитория
+            >>> class MyService(BaseService):
+            ...     ...
+            ...
+            >>> # Инициализация сервиса с сессией
+            >>> db_session_instance = AsyncSession()
+            >>> service = MyService(db_session_instance)
+            >>> service._repository = MockRepository()
+            >>>
+            >>> async def main():
+            ...     # Получение существующей сущности
+            ...     result: UserModel = await service.get(1)
+            ...     print(isinstance(result, UserModel))
+            ...     # True
+            ...     print(result.name)
+            ...     # 'John'
+            ...
+            ...     # Получение несуществующей сущности (возвращается None)
+            ...     result = await service.get(999)
+            ...     print(result is None)
+            ...     # True
+        """
+        return await self._repository.get(entity_id)
