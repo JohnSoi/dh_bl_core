@@ -1,10 +1,11 @@
 """Модуль для создания FastAPI приложения."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from x_request_id_middleware.fastapi_middleware import FastAPIXRequestIDMiddleware
 
 from dh_bl_core.api.middlewares import LogRequestResponseMiddleware
 from dh_bl_core.config import AppConfig, get_app_config
+from dh_bl_core.exceptions import InternalServerErrorException
 from dh_bl_core.logging import LogManager
 
 
@@ -24,6 +25,7 @@ class AppCreator:
         _BASE_MIDDLEWARES (list): Список базовых middleware, которые добавляются
             к каждому создаваемому приложению по умолчанию.
         _middlewares (list): Список middleware, которые будут добавлены к приложению.
+        _routes (list): Список роутеров, которые будут добавлены к приложению.
 
     Examples:
         >>> # Пример 1: Создание экземпляра AppCreator и приложения
@@ -89,6 +91,7 @@ class AppCreator:
 
         cls._instance = super(AppCreator, cls).__new__(cls)
         cls._instance._middlewares = AppCreator._BASE_MIDDLEWARES.copy()
+        cls._instance._routes = []
         cls._LOGGER.debug("AppCreator создан")
         return cls._instance
 
@@ -114,6 +117,7 @@ class AppCreator:
             True
         """
         self._middlewares: list = AppCreator._BASE_MIDDLEWARES.copy()
+        self._routes: list[APIRouter] = []
 
     def add_middleware(self, middleware) -> None:
         """
@@ -144,6 +148,15 @@ class AppCreator:
             >>> # будут автоматически добавлены через app.add_middleware()
         """
         self._middlewares.append(middleware)
+
+    def add_route(self, route: APIRouter) -> None:
+        if route in self._routes:
+            return
+
+        if not isinstance(route, APIRouter):
+            raise InternalServerErrorException("Неверный тип добавляемого роута в приложение")
+
+        self._routes.append(route)
 
     def create_app(self) -> FastAPI:
         """
@@ -185,6 +198,9 @@ class AppCreator:
 
         for middleware in self._middlewares:
             app.add_middleware(middleware)
+
+        for route in self._routes:
+            app.include_router(route)
 
         return app
 

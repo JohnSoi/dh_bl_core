@@ -95,6 +95,11 @@ class BaseAppException(HTTPException):
             status_code=status_code or self._STATUS_CODE,
         )
 
+    @property
+    def details(self) -> str:
+        """Возвращает детальное сообщение об ошибке."""
+        return self._DETAILS
+
 
 class NotFoundException(BaseAppException):
     """
