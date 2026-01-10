@@ -6,6 +6,7 @@ from pydantic import BaseModel as BaseSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dh_bl_core.database.types import BaseModel
+from dh_bl_core.logging import LogManager
 
 from .exceptions import EmptyRepositoryNotAllowedException
 from .types import BaseRepository
@@ -45,6 +46,7 @@ class BaseService(Generic[BaseRepository, BaseModel]):
     """
 
     _REPOSITORY: Type[BaseRepository]
+    _LOGGER = LogManager().logger
 
     def __init__(self, db_session: AsyncSession) -> None:
         """
@@ -92,7 +94,10 @@ class BaseService(Generic[BaseRepository, BaseModel]):
         self._repository = self._REPOSITORY(db_session)
 
         if not self._repository:
+            self._LOGGER.error("Репозиторий не может быть пустым.")
             raise EmptyRepositoryNotAllowedException()
+
+        self._LOGGER.debug(f'Сервис "{self.__class__.__name__}" инициализирован.')
 
     async def create(self, payload: BaseSchema) -> BaseModel:
         """
@@ -142,6 +147,7 @@ class BaseService(Generic[BaseRepository, BaseModel]):
             ...     print(result.name)
             'John'
         """
+        self._LOGGER.debug(f'Создание сущности "{payload.__class__.__name__}" в сервисе "{self.__class__.__name__}".')
         return await self._repository.create(payload.model_dump(exclude_unset=True))
 
     async def update(self, payload: BaseSchema) -> BaseModel:
@@ -193,6 +199,7 @@ class BaseService(Generic[BaseRepository, BaseModel]):
             ...     print(result.name)
             'John Doe'
         """
+        self._LOGGER.debug(f'Обновление сущности "{payload.__class__.__name__}" в сервисе "{self.__class__.__name__}".')
         return await self._repository.update(payload.model_dump(exclude_unset=True))
 
     async def delete(self, entity_id: int) -> bool:
@@ -229,6 +236,7 @@ class BaseService(Generic[BaseRepository, BaseModel]):
             ...     print(result)
             True
         """
+        self._LOGGER.debug(f'Удаление сущности с ID "{entity_id}" в сервисе "{self.__class__.__name__}".')
         return await self._repository.delete(entity_id)
 
     async def get(self, entity_id: int) -> BaseModel:
@@ -281,4 +289,5 @@ class BaseService(Generic[BaseRepository, BaseModel]):
             ...     print(result is None)
             ...     # True
         """
+        self._LOGGER.debug(f'Получение сущности с ID "{entity_id}" в сервисе "{self.__class__.__name__}".')
         return await self._repository.get(entity_id)
