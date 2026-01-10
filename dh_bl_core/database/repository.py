@@ -289,12 +289,12 @@ class BaseRepository(Generic[BaseModel]):
         """
         stmt: Select = select(self._MODEL).filter_by(**filters).limit(1)
         result: Result[BaseModel] = await self._db_session.execute(stmt)
-        entity: BaseModel = result.scalar_one_or_none()
+        entity: BaseModel | None = result.scalar_one_or_none()
 
         if not entity:
             raise NotFoundException(self._MODEL.__name__)
 
-        return result.scalar_one_or_none()
+        return entity
 
     async def get_one_or_none_by_filters(self, filters: dict) -> BaseModel | None:
         """
