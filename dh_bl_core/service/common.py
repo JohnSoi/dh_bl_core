@@ -1,6 +1,7 @@
 """Базовый сервис."""
 
 from typing import Generic, Type
+from uuid import UUID
 
 from pydantic import BaseModel as BaseSchema
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -291,3 +292,63 @@ class BaseService(Generic[BaseRepository, BaseModel]):
         """
         self._LOGGER.debug(f'Получение сущности с ID "{entity_id}" в сервисе "{self.__class__.__name__}".')
         return await self._repository.get(entity_id)
+    
+    async def get_by_uuid(self, uuid: UUID) -> BaseModel:
+        """
+        Получает сущность по её UUID.
+
+        Метод передаёт UUID репозиторию для получения соответствующей записи
+        из базы данных.
+
+        Args:
+            uuid (UUID): UUID сущности, которую нужно получить.
+
+        Returns:
+            BaseModel: Найденная сущность в виде модели базы данных.
+
+        Examples:
+            >>> from uuid import UUID
+            >>> from dh_bl_core.database import BaseModel
+            >>>
+            >>> class UserModel(BaseModel):
+            ...     id: int
+            ...     uuid: UUID
+            ...     name: str
+            ...     email: str
+            ...
+            >>> # Мок для репозитория
+            >>> class MockRepository:
+            ...     async def get_by_uuid(self, uuid: UUID):
+            ...         if str(uuid) == "123e4567-e89b-12d3-a456-426614174000":
+            ...             return UserModel(
+            ...                 id=1,
+            ...                 uuid=UUID("123e4567-e89b-12d3-a456-426614174000"),
+            ...                 name="John",
+            ...                 email="john@example.com"
+            ...             )
+            ...         return None
+            ...
+            >>> # Создание сервиса с моком репозитория
+            >>> class MyService(BaseService):
+            ...     ...
+            ...
+            >>> # Инициализация сервиса с сессией
+            >>> db_session_instance = AsyncSession()
+            >>> service = MyService(db_session_instance)
+            >>> service._repository = MockRepository()
+            >>>
+            >>> async def main():
+            ...     # Получение существующей сущности по UUID
+            ...     test_uuid = UUID("123e4567-e89b-12d3-a456-426614174000")
+            ...     result: UserModel = await service.get_by_uuid(test_uuid)
+            ...     print(isinstance(result, UserModel))
+            ...     # True
+            ...     print(result.name)
+            ...     # 'John'
+            ...
+            ...     # Получение несуществующей сущности (возвращается None)
+            ...     result = await service.get_by_uuid(UUID("00000000-0000-0000-0000-000000000000"))
+            ...     print(result is None)
+            ...     # True
+        """
+        return await self._repository.get_by_uuid(uuid)
